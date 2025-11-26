@@ -81,6 +81,61 @@ app.post('/momo/create', async (req, res) => {
     }
 });
 
+app.post('/momo/query', async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        if (!orderId) {
+            return res.status(400).json({ message: "orderId is required" });
+        }
+
+        const requestId = orderId; // Using orderId as requestId for simplicity
+        const requestType = "transactionStatus";
+
+        // Signature Generation for Query
+        const rawSignature =
+            `accessKey=${config.accessKey}&orderId=${orderId}&partnerCode=${config.partnerCode}` +
+            `&requestId=${requestId}`;
+
+        const signature = crypto
+            .createHmac('sha256', config.secretKey)
+            .update(rawSignature)
+            .digest('hex');
+
+        const requestBody = {
+            partnerCode: config.partnerCode,
+            requestId: requestId,
+            orderId: orderId,
+            requestType: requestType,
+            lang: "vi",
+            signature: signature
+        };
+
+        console.log("Querying MoMo:", requestBody);
+
+        // Note: Query endpoint is different usually, but for v2 it might be the same base URL with /query
+        // Let's check the config.endpoint. It is .../create. Query is .../query.
+        const queryEndpoint = "https://test-payment.momo.vn/v2/gateway/api/query";
+
+        const response = await axios.post(queryEndpoint, requestBody);
+
+        console.log("MoMo Query Response:", response.data);
+
+        return res.status(200).json(response.data);
+
+    } catch (error) {
+        console.error("Query Error:", error.message);
+        if (error.response) {
+            console.error("MoMo Query Error Body:", error.response.data);
+        }
+        return res.status(500).json({
+            message: "Internal Server Error",
+            details: error.message
+        });
+    }
+});
+
+
 app.listen(port, () => {
     console.log(`Backend running at http://localhost:${port}`);
 });

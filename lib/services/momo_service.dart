@@ -42,4 +42,24 @@ class MomoService {
       };
     }
   }
+
+  Future<Map<String, dynamic>?> checkStatus(String orderId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("http://localhost:3000/momo/query"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"orderId": orderId}),
+      );
+
+      print("MoMo Query RES: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print("MoMo Query ERROR: $e");
+      return null;
+    }
+  }
 }

@@ -23,6 +23,7 @@ class _MockPaymentPageState extends State<MockPaymentPage> {
   String _selectedMethod = 'card'; // Mặc định
   bool _isProcessing = false;
   final MomoService _momoService = MomoService(); // Khởi tạo service
+  String? _currentOrderId; // Lưu orderId để kiểm tra trạng thái
 
   // Hàm xử lý thanh toán
   Future<void> _processPayment() async {
@@ -40,6 +41,7 @@ class _MockPaymentPageState extends State<MockPaymentPage> {
     );
 
     if (response != null && response['resultCode'] == 0) {
+      _currentOrderId = response['orderId']; // Use orderId from Backend
       String payUrl = response["payUrl"]; // LUÔN CÓ TRONG SANDBOX
 
       final uri = Uri.parse(payUrl);
@@ -59,14 +61,14 @@ class _MockPaymentPageState extends State<MockPaymentPage> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(ctx); // Đóng dialog hỏi
-                    // Không làm gì thêm, coi như hủy hoặc chưa xong
+                    setState(() => _isProcessing = false); // Tắt loading
                   },
                   child: const Text("Chưa"),
                 ),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(ctx); // Đóng dialog hỏi
-                    _showSuccessDialog(); // Hiện dialog thành công của app
+                    _checkPaymentStatus(); // Kiểm tra trạng thái thanh toán
                   },
                   child: const Text("Rồi, đã thanh toán"),
                 ),
@@ -92,6 +94,23 @@ else {
         setState(() => _isProcessing = false);
         _showSuccessDialog();
       }
+    }
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    if (_currentOrderId == null) return;
+
+    setState(() => _isProcessing = true);
+
+    final response = await _momoService.checkStatus(_currentOrderId!);
+    
+    setState(() => _isProcessing = false);
+
+    if (response != null && response['resultCode'] == 0) {
+      _showSuccessDialog();
+    } else {
+      String msg = response?['message'] ?? "Giao dịch chưa thành công hoặc thất bại";
+      _showError(msg);
     }
   }
 
