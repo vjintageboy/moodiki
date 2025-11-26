@@ -49,32 +49,9 @@ class _MockPaymentPageState extends State<MockPaymentPage> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
 
-        // Không hiển thị thành công ngay, mà hỏi người dùng
+        // Tự động kiểm tra trạng thái (Polling)
         if (mounted) {
-           showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) => AlertDialog(
-              title: const Text("Xác nhận thanh toán"),
-              content: const Text("Bạn đã hoàn tất thanh toán trên MoMo chưa?"),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx); // Đóng dialog hỏi
-                    setState(() => _isProcessing = false); // Tắt loading
-                  },
-                  child: const Text("Chưa"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx); // Đóng dialog hỏi
-                    _checkPaymentStatus(); // Kiểm tra trạng thái thanh toán
-                  },
-                  child: const Text("Rồi, đã thanh toán"),
-                ),
-              ],
-            ),
-          );
+           _showPollingDialog();
         }
       } else {
         _showError("Không mở được MoMo");
@@ -97,21 +74,56 @@ else {
     }
   }
 
-  Future<void> _checkPaymentStatus() async {
-    if (_currentOrderId == null) return;
+  Timer? _pollTimer;
 
-    setState(() => _isProcessing = true);
+  void _showPollingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text("Đang chờ thanh toán..."),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () {
+                _pollTimer?.cancel();
+                Navigator.pop(ctx);
+                setState(() => _isProcessing = false);
+              },
+              child: const Text("Hủy"),
+            )
+          ],
+        ),
+      ),
+    );
 
-    final response = await _momoService.checkStatus(_currentOrderId!);
-    
-    setState(() => _isProcessing = false);
+    // Bắt đầu poll mỗi 3 giây
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      if (_currentOrderId == null || !mounted) {
+        timer.cancel();
+        return;
+      }
 
-    if (response != null && response['resultCode'] == 0) {
-      _showSuccessDialog();
-    } else {
-      String msg = response?['message'] ?? "Giao dịch chưa thành công hoặc thất bại";
-      _showError(msg);
-    }
+      final response = await _momoService.checkStatus(_currentOrderId!);
+
+      if (response != null && response['resultCode'] == 0) {
+        timer.cancel();
+        if (mounted) {
+          Navigator.pop(context); // Đóng dialog loading
+          _showSuccessDialog();
+        }
+      } else if (timer.tick > 20) { // Timeout sau 60s (20 * 3)
+        timer.cancel();
+        if (mounted) {
+           Navigator.pop(context);
+           _showError("Hết thời gian chờ thanh toán.");
+        }
+      }
+    });
   }
 
   void _showError(String message) {
