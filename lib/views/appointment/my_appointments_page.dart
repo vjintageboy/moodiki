@@ -199,7 +199,9 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage>
                       : null,
                   child: appointment.expertAvatarUrl == null
                       ? Text(
-                          appointment.expertName[0].toUpperCase(),
+                          appointment.expertName.isNotEmpty 
+                              ? appointment.expertName[0].toUpperCase() 
+                              : '?',
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
@@ -223,7 +225,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage>
                         ),
                       ),
                       const SizedBox(height: 4),
-                      _buildStatusBadge(appointment.status),
+                      _buildStatusBadge(appointment.status, refundStatus: appointment.refundStatus),
                     ],
                   ),
                 ),
@@ -316,7 +318,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage>
     );
   }
 
-  Widget _buildStatusBadge(AppointmentStatus status) {
+  Widget _buildStatusBadge(AppointmentStatus status, {RefundStatus? refundStatus}) {
     Color bgColor;
     Color textColor;
     String text;
@@ -333,9 +335,24 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage>
         text = context.l10n.completed;
         break;
       case AppointmentStatus.cancelled:
-        bgColor = Colors.red.withOpacity(0.1);
-        textColor = Colors.red;
-        text = context.l10n.cancelled;
+        // Check refund status
+        if (refundStatus == RefundStatus.success) {
+           bgColor = Colors.orange.withOpacity(0.1);
+           textColor = Colors.orange;
+           text = 'Refunded';
+        } else if (refundStatus == RefundStatus.failed) {
+           bgColor = Colors.red.withOpacity(0.1);
+           textColor = Colors.red;
+           text = 'Refund Failed';
+        } else if (refundStatus == RefundStatus.pending) {
+           bgColor = Colors.yellow.withOpacity(0.1);
+           textColor = Colors.orange;
+           text = 'Refund Pending';
+        } else {
+           bgColor = Colors.grey.withOpacity(0.1);
+           textColor = Colors.grey;
+           text = context.l10n.cancelled;
+        }
         break;
       case AppointmentStatus.pending:
         bgColor = Colors.orange.withOpacity(0.1);
@@ -533,13 +550,24 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage>
 
   Future<void> _cancelAppointment(Appointment appointment) async {
     try {
-      await _appointmentService.cancelAppointment(appointment.appointmentId);
+      final refundStatus = await _appointmentService.cancelAppointment(appointment.appointmentId);
       
       if (mounted) {
+        String message = '✅ Appointment cancelled successfully';
+        Color color = const Color(0xFF4CAF50);
+
+        if (refundStatus == RefundStatus.success) {
+          message = '✅ Appointment cancelled & Refunded successfully';
+        } else if (refundStatus == RefundStatus.failed) {
+          message = '⚠️ Appointment cancelled but Refund failed. Please contact support.';
+          color = Colors.orange;
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Appointment cancelled successfully'),
-            backgroundColor: Color(0xFF4CAF50),
+          SnackBar(
+            content: Text(message),
+            backgroundColor: color,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

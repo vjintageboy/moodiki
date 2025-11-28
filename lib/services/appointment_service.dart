@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/appointment.dart';
+import 'momo_service.dart';
+import 'notification_service.dart';
 
 class AppointmentService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final MomoService _momoService = MomoService();
+  final NotificationService _notificationService = NotificationService();
 
   // Create appointment
   Future<String?> createAppointment(Appointment appointment) async {
@@ -30,18 +34,8 @@ class AppointmentService {
       }
 
       final docRef = _db.collection('appointments').doc();
-      final newAppointment = Appointment(
+      final newAppointment = appointment.copyWith(
         appointmentId: docRef.id,
-        userId: appointment.userId,
-        expertId: appointment.expertId,
-        expertName: appointment.expertName,
-        expertAvatarUrl: appointment.expertAvatarUrl,
-        expertBasePrice: appointment.expertBasePrice, // ✅ NEW
-        callType: appointment.callType,
-        appointmentDate: appointment.appointmentDate,
-        durationMinutes: appointment.durationMinutes,
-        status: AppointmentStatus.confirmed, // Auto-confirm
-        userNotes: appointment.userNotes,
       );
 
       await docRef.set(newAppointment.toMap());
@@ -49,6 +43,28 @@ class AppointmentService {
     } catch (e) {
       print('❌ Error creating appointment: $e');
       rethrow; // Re-throw to show error message to user
+    }
+  }
+
+  // Update payment ID after successful payment
+  Future<void> updateAppointmentPaymentId(
+    String appointmentId,
+    String paymentId,
+    String paymentTransId,
+  ) async {
+    try {
+      if (appointmentId.isEmpty) {
+        print('❌ Cannot update payment: appointmentId is empty');
+        return;
+      }
+
+      await _db.collection('appointments').doc(appointmentId).update({
+        'paymentId': paymentId,
+        'paymentTransId': paymentTransId,
+      });
+    } catch (e) {
+      print('❌ Error updating payment ID: $e');
+      rethrow;
     }
   }
 
@@ -187,12 +203,130 @@ class AppointmentService {
   }
 
   // Cancel appointment (user)
-  Future<void> cancelAppointment(String appointmentId) async {
+  Future<RefundStatus> cancelAppointment(String appointmentId) async {
     try {
-      await _db.collection('appointments').doc(appointmentId).update({
+      if (appointmentId.isEmpty) {
+         throw Exception('Appointment ID is empty');
+      }
+
+      final docRef = _db.collection('appointments').doc(appointmentId);
+      final doc = await docRef.get();
+      if (!doc.exists) throw Exception('Appointment not found');
+
+      final appointment = Appointment.fromSnapshot(doc);
+
+      // Determine refund status
+      RefundStatus refundStatus = RefundStatus.none;
+      
+      // Check if we have payment info, or at least paymentId to query transId
+      String? paymentId = appointment.paymentId;
+      String? transId = appointment.paymentTransId;
+
+      print('ℹ️ Cancelling Appointment: ${appointment.appointmentId}');
+      print('   - Payment ID: $paymentId');
+      print('   - Trans ID: $transId');
+
+      if (paymentId != null) {
+        // Handle Mock Payments
+        if (paymentId.startsWith('MOCK_')) {
+          refundStatus = RefundStatus.success;
+          print('✅ [MOCK REFUND] Refund Successful for Appointment: ${appointment.appointmentId}');
+          
+          await _notificationService.sendNotification(
+            userId: appointment.userId,
+            title: 'Refund Successful',
+            message: 'Your appointment with ${appointment.expertName} has been cancelled and refunded successfully (Mock).',
+            type: 'refund',
+          );
+        } 
+        // Handle Real MoMo Payments
+        else {
+          // If transId is missing or invalid (0), try to fetch/check it
+          if (transId == null || transId == '0') {
+            try {
+              final queryRes = await _momoService.checkStatus(paymentId);
+              if (queryRes != null && queryRes['resultCode'] == 0) {
+                final fetchedTransId = queryRes['transId'];
+                // Only update if we get a valid positive transId
+                if (fetchedTransId != null && fetchedTransId is num && fetchedTransId > 0) {
+                   transId = fetchedTransId.toString();
+                   await docRef.update({'paymentTransId': transId});
+                   print('✅ Fetched valid Trans ID: $transId');
+                } else {
+                   print('⚠️ Query success but Trans ID is invalid/pending: $fetchedTransId');
+                }
+              }
+            } catch (e) {
+              print("Error fetching missing transId: $e");
+            }
+          }
+
+          // Only proceed with refund if we have a valid transId (not null, not '0')
+          if (transId != null && transId != '0') {
+            // Call refund API
+            final refundRes = await _momoService.refundPayment(
+              orderId: paymentId,
+              amount: appointment.price,
+              transId: transId,
+            );
+
+            if (refundRes != null && refundRes['resultCode'] == 0) {
+              refundStatus = RefundStatus.success;
+              print('✅ [MOMO REFUND] Refund Successful for Appointment: ${appointment.appointmentId}');
+              print('   - Trans ID: $transId');
+
+              // Refund success notification
+              await _notificationService.sendNotification(
+                userId: appointment.userId,
+                title: 'Refund Successful',
+                message: 'Your appointment with ${appointment.expertName} has been cancelled and refunded successfully.',
+                type: 'refund',
+              );
+            } else {
+              refundStatus = RefundStatus.failed;
+              print('❌ [REFUND FAILED] MoMo Refund Failed for Appointment: ${appointment.appointmentId}');
+              print('   - Error: ${refundRes?['message']}');
+
+              // Refund failed notification
+              await _notificationService.sendNotification(
+                userId: appointment.userId,
+                title: 'Refund Failed',
+                message: 'Your appointment was cancelled but refund failed. Please contact support.',
+                type: 'refund_error',
+              );
+            }
+          } else {
+             // Payment ID exists but Trans ID is invalid (0 or null) -> Transaction not confirmed/captured
+             print('⚠️ [REFUND SKIP] Payment ID exists but Trans ID is invalid (0 or null). Transaction likely not completed/captured.');
+             
+             // Notify cancellation but mention check status
+             await _notificationService.sendNotification(
+              userId: appointment.userId,
+              title: 'Appointment Cancelled',
+              message: 'Your appointment with ${appointment.expertName} has been cancelled.',
+              type: 'cancellation',
+            );
+          }
+        }
+      } else {
+        // No payment info found - just cancel
+        print('ℹ️ [CANCEL] Appointment cancelled without refund (No payment info).');
+        await _notificationService.sendNotification(
+          userId: appointment.userId,
+          title: 'Appointment Cancelled',
+          message: 'Your appointment with ${appointment.expertName} has been cancelled.',
+          type: 'cancellation',
+        );
+      }
+
+      await docRef.update({
         'status': AppointmentStatus.cancelled.name,
         'cancelledAt': Timestamp.now(),
+        'cancelledBy': 'user',
+        'refundStatus': refundStatus.name,
       });
+
+      return refundStatus;
     } catch (e) {
       print('❌ Error cancelling appointment: $e');
       rethrow;
@@ -205,11 +339,107 @@ class AppointmentService {
     String reason,
   ) async {
     try {
-      await _db.collection('appointments').doc(appointmentId).update({
+      if (appointmentId.isEmpty) {
+         throw Exception('Appointment ID is empty');
+      }
+
+      final docRef = _db.collection('appointments').doc(appointmentId);
+      final doc = await docRef.get();
+      if (!doc.exists) throw Exception('Appointment not found');
+
+      final appointment = Appointment.fromSnapshot(doc);
+
+      // Determine refund status
+      RefundStatus refundStatus = RefundStatus.none;
+      
+      String? paymentId = appointment.paymentId;
+      String? transId = appointment.paymentTransId;
+
+      print('ℹ️ Expert Cancelling Appointment: ${appointment.appointmentId}');
+
+      if (paymentId != null) {
+        // Handle Mock
+        if (paymentId.startsWith('MOCK_')) {
+           refundStatus = RefundStatus.success;
+           await _notificationService.sendNotification(
+              userId: appointment.userId,
+              title: 'Appointment Cancelled & Refunded',
+              message: 'Expert ${appointment.expertName} cancelled the appointment. Reason: $reason. Refund has been processed (Mock).',
+              type: 'refund',
+            );
+        }
+        else {
+           // Real MoMo
+           if (transId == null || transId == '0') {
+            try {
+              final queryRes = await _momoService.checkStatus(paymentId);
+              if (queryRes != null && queryRes['resultCode'] == 0) {
+                 final fetchedTransId = queryRes['transId'];
+                 if (fetchedTransId != null && fetchedTransId is num && fetchedTransId > 0) {
+                   transId = fetchedTransId.toString();
+                   await docRef.update({'paymentTransId': transId});
+                 }
+              }
+            } catch (e) {
+              print("Error fetching missing transId: $e");
+            }
+          }
+
+          if (transId != null && transId != '0') {
+            // Call refund API
+            final refundRes = await _momoService.refundPayment(
+              orderId: paymentId,
+              amount: appointment.price,
+              transId: transId,
+            );
+
+            if (refundRes != null && refundRes['resultCode'] == 0) {
+               refundStatus = RefundStatus.success;
+               print('✅ [MOMO REFUND] Expert Cancel - Refund Success');
+               
+              await _notificationService.sendNotification(
+                userId: appointment.userId,
+                title: 'Appointment Cancelled & Refunded',
+                message: 'Expert ${appointment.expertName} cancelled the appointment. Reason: $reason. Refund has been processed.',
+                type: 'refund',
+              );
+            } else {
+               refundStatus = RefundStatus.failed;
+               print('❌ [REFUND FAILED] Expert Cancel - Refund Failed');
+               
+               await _notificationService.sendNotification(
+                userId: appointment.userId,
+                title: 'Refund Failed',
+                message: 'Expert cancelled the appointment but refund failed. Please contact support.',
+                type: 'refund_error',
+              );
+            }
+          } else {
+             // No valid transId
+             await _notificationService.sendNotification(
+                userId: appointment.userId,
+                title: 'Appointment Cancelled',
+                message: 'Expert ${appointment.expertName} cancelled the appointment. Reason: $reason.',
+                type: 'cancellation',
+              );
+          }
+        }
+      } else {
+        // No payment
+        await _notificationService.sendNotification(
+            userId: appointment.userId,
+            title: 'Appointment Cancelled',
+            message: 'Expert ${appointment.expertName} cancelled the appointment. Reason: $reason.',
+            type: 'cancellation',
+          );
+      }
+
+      await docRef.update({
         'status': AppointmentStatus.cancelled.name,
         'cancelledAt': Timestamp.now(),
         'cancellationReason': reason,
-        'cancelledBy': 'expert', // Track who cancelled
+        'cancelledBy': 'expert',
+        'refundStatus': refundStatus.name,
       });
     } catch (e) {
       print('❌ Error cancelling appointment: $e');

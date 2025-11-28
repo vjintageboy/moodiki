@@ -1,8 +1,13 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class MomoService {
-  static const String _endpoint = "http://localhost:3000/momo/create";
+  String get _baseUrl {
+    if (kIsWeb) return "http://localhost:3000";
+    if (defaultTargetPlatform == TargetPlatform.android) return "http://10.0.2.2:3000";
+    return "http://localhost:3000";
+  }
 
   Future<Map<String, dynamic>?> createPayment({
     required String orderId,
@@ -11,7 +16,7 @@ class MomoService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse(_endpoint),
+        Uri.parse("$_baseUrl/momo/create"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "amount": amount.toInt(),
@@ -46,7 +51,7 @@ class MomoService {
   Future<Map<String, dynamic>?> checkStatus(String orderId) async {
     try {
       final response = await http.post(
-        Uri.parse("http://localhost:3000/momo/query"),
+        Uri.parse("$_baseUrl/momo/query"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"orderId": orderId}),
       );
@@ -60,6 +65,43 @@ class MomoService {
     } catch (e) {
       print("MoMo Query ERROR: $e");
       return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> refundPayment({
+    required String orderId,
+    required double amount,
+    required String transId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$_baseUrl/momo/refund"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "orderId": orderId,
+          "amount": amount.toInt(),
+          "transId": transId,
+        }),
+      );
+
+      print("MoMo Refund RES: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print("MoMo Refund Server Error: ${response.statusCode}");
+        return {
+          "resultCode": -1,
+          "message": "Server error: ${response.statusCode}",
+          "details": response.body
+        };
+      }
+    } catch (e) {
+      print("MoMo Refund ERROR: $e");
+      return {
+        "resultCode": -1,
+        "message": "Connection error: $e"
+      };
     }
   }
 }

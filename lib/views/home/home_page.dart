@@ -14,6 +14,8 @@ import '../../models/meditation.dart';
 import '../../models/streak.dart';
 import '../../scripts/migrate_existing_users.dart';
 import '../../core/services/localization_service.dart';
+import '../notification/notifications_page.dart';
+import '../../services/notification_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -292,7 +294,7 @@ class _HomeTabState extends State<HomeTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ⭐ Greeting with Admin Badge
+              // ⭐ Greeting with Admin Badge and Notification Icon
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Row(
@@ -305,6 +307,56 @@ class _HomeTabState extends State<HomeTab> {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
+                    ),
+                    // Notification Icon
+                    StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: NotificationService().streamNotifications(FirebaseAuth.instance.currentUser?.uid ?? ''),
+                      builder: (context, snapshot) {
+                        final notifications = snapshot.data ?? [];
+                        final unreadCount = notifications.where((n) => n['isRead'] == false).length;
+
+                        return Stack(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const NotificationsPage(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.notifications_outlined, size: 28),
+                              color: Colors.black87,
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Text(
+                                    '$unreadCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),

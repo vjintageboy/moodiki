@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart'; // Import thêm
 import '../../core/services/localization_service.dart';
 import '../../models/appointment.dart';
 import '../../services/momo_service.dart'; // Import Service mới tạo
+import '../../services/appointment_service.dart';
 import 'my_appointments_page.dart';
 
 class MockPaymentPage extends StatefulWidget {
@@ -20,10 +21,11 @@ class MockPaymentPage extends StatefulWidget {
 }
 
 class _MockPaymentPageState extends State<MockPaymentPage> {
-  String _selectedMethod = 'card'; // Mặc định
-  bool _isProcessing = false;
+  final AppointmentService _appointmentService = AppointmentService(); // Instantiate
   final MomoService _momoService = MomoService(); // Khởi tạo service
   String? _currentOrderId; // Lưu orderId để kiểm tra trạng thái
+  String _selectedMethod = 'card'; // Mặc định
+  bool _isProcessing = false;
 
   // Hàm xử lý thanh toán
   Future<void> _processPayment() async {
@@ -65,8 +67,24 @@ class _MockPaymentPageState extends State<MockPaymentPage> {
     }
   }
 else {
-      // --- LOGIC GIẢ LẬP CŨ (Thẻ/Ngân hàng) ---
+      // --- LOGIC GIẢ LẬP (Thẻ/Ngân hàng) ---
       await Future.delayed(const Duration(seconds: 2));
+      
+      // Generate Mock IDs
+      final mockPaymentId = "MOCK_PAYMENT_${DateTime.now().millisecondsSinceEpoch}";
+      final mockTransId = "MOCK_TRANS_${DateTime.now().millisecondsSinceEpoch}";
+
+      try {
+        await _appointmentService.updateAppointmentPaymentId(
+          widget.appointment.appointmentId,
+          mockPaymentId,
+          mockTransId,
+        );
+      } catch (e) {
+        print("Error saving mock payment info: $e");
+        // Continue to success dialog anyway for mock flow
+      }
+
       if (mounted) {
         setState(() => _isProcessing = false);
         _showSuccessDialog();
@@ -112,6 +130,30 @@ else {
 
       if (response != null && response['resultCode'] == 0) {
         timer.cancel();
+        
+        // Payment success - Update appointment with payment info
+        try {
+          final transId = response['transId'];
+          if (transId == null) {
+             throw Exception("Transaction ID missing from MoMo response");
+          }
+
+          await _appointmentService.updateAppointmentPaymentId(
+            widget.appointment.appointmentId,
+            response['orderId'],
+            transId.toString(), // Ensure string
+          );
+        } catch (e) {
+          print("Error updating payment info: $e");
+          if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+               content: Text("Lỗi lưu thông tin thanh toán: $e"),
+               backgroundColor: Colors.red,
+             ));
+          }
+          // Still proceed to success dialog as payment was successful
+        }
+
         if (mounted) {
           Navigator.pop(context); // Đóng dialog loading
           _showSuccessDialog();

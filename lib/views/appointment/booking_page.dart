@@ -295,17 +295,22 @@ class _BookingPageState extends State<BookingPage> {
 
     try {
       // Create appointment (will throw if conflict exists)
-      await _appointmentService.createAppointment(appointment);
+      final newAppointmentId = await _appointmentService.createAppointment(appointment);
 
-      if (mounted) {
+      if (mounted && newAppointmentId != null) {
         Navigator.pop(context); // Close loading
+
+        // Update appointment with the generated ID
+        final appointmentWithId = appointment.copyWith(
+          appointmentId: newAppointmentId,
+        );
 
         // Success - navigate to mock payment
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => MockPaymentPage(
-              appointment: appointment,
+              appointment: appointmentWithId,
             ),
           ),
         );

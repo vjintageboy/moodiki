@@ -12,6 +12,13 @@ enum AppointmentStatus {
   cancelled,  // Đã hủy
 }
 
+enum RefundStatus {
+  none,    // Không có hoàn tiền
+  pending, // Đang xử lý
+  success, // Đã hoàn tiền
+  failed,  // Hoàn tiền thất bại
+}
+
 class Appointment {
   final String appointmentId;
   final String userId;
@@ -31,6 +38,9 @@ class Appointment {
   final DateTime? cancelledAt;
   final String? cancelledBy; // 'user' or 'expert'
   final String? cancellationReason; // Only for expert cancellations
+  final String? paymentId; // MoMo Order ID
+  final String? paymentTransId; // MoMo Transaction ID
+  final RefundStatus refundStatus; // ✅ NEW: Trạng thái hoàn tiền
 
   Appointment({
     required this.appointmentId,
@@ -48,6 +58,9 @@ class Appointment {
     this.cancelledAt,
     this.cancelledBy,
     this.cancellationReason,
+    this.paymentId,
+    this.paymentTransId,
+    this.refundStatus = RefundStatus.none,
   }) : createdAt = createdAt ?? DateTime.now();
 
   // ✅ Getter: Tính giá động
@@ -123,6 +136,9 @@ class Appointment {
       'cancelledAt': cancelledAt != null ? Timestamp.fromDate(cancelledAt!) : null,
       'cancelledBy': cancelledBy,
       'cancellationReason': cancellationReason,
+      'paymentId': paymentId,
+      'paymentTransId': paymentTransId,
+      'refundStatus': refundStatus.name, // ✅ NEW
     };
   }
 
@@ -151,18 +167,28 @@ class Appointment {
       cancelledAt: (data['cancelledAt'] as Timestamp?)?.toDate(),
       cancelledBy: data['cancelledBy'],
       cancellationReason: data['cancellationReason'],
+      paymentId: data['paymentId'],
+      paymentTransId: data['paymentTransId'],
+      refundStatus: RefundStatus.values.firstWhere(
+        (e) => e.name == (data['refundStatus'] ?? 'none'),
+        orElse: () => RefundStatus.none,
+      ),
     );
   }
 
   // Copy with method for updating fields
   Appointment copyWith({
+    String? appointmentId,
     AppointmentStatus? status,
     DateTime? cancelledAt,
     String? cancelledBy,
     String? cancellationReason,
+    String? paymentId,
+    String? paymentTransId,
+    RefundStatus? refundStatus,
   }) {
     return Appointment(
-      appointmentId: appointmentId,
+      appointmentId: appointmentId ?? this.appointmentId,
       userId: userId,
       expertId: expertId,
       expertName: expertName,
@@ -177,6 +203,9 @@ class Appointment {
       cancelledAt: cancelledAt ?? this.cancelledAt,
       cancelledBy: cancelledBy ?? this.cancelledBy,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      paymentId: paymentId ?? this.paymentId,
+      paymentTransId: paymentTransId ?? this.paymentTransId,
+      refundStatus: refundStatus ?? this.refundStatus,
     );
   }
 }

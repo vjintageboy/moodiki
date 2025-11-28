@@ -135,6 +135,70 @@ app.post('/momo/query', async (req, res) => {
     }
 });
 
+app.post('/momo/refund', async (req, res) => {
+    try {
+        const { orderId, amount, transId } = req.body;
+
+        if (!orderId || !amount || !transId) {
+            return res.status(400).json({ message: "orderId, amount, and transId are required" });
+        }
+
+        // Generate a NEW unique orderId for this refund transaction
+        const refundOrderId = "REFUND" + new Date().getTime();
+        const requestId = refundOrderId;
+        const requestType = "refundMoMoWallet";
+        const description = "Hoan tien don hang " + orderId;
+        const amountStr = amount.toString();
+
+        // Signature Generation for Refund
+        // User instruction: accessKey, amount, description, orderId, partnerCode, requestId, transId
+        // REMOVED: requestType
+        const rawSignature =
+            `accessKey=${config.accessKey}&amount=${amountStr}&description=${description}` +
+            `&orderId=${refundOrderId}&partnerCode=${config.partnerCode}&requestId=${requestId}` +
+            `&transId=${transId}`;
+
+        console.log("Refund Raw Signature:", rawSignature);
+
+        const signature = crypto
+            .createHmac('sha256', config.secretKey)
+            .update(rawSignature)
+            .digest('hex');
+
+        const requestBody = {
+            partnerCode: config.partnerCode,
+            requestId: requestId,
+            orderId: refundOrderId,
+            requestType: requestType,
+            amount: amountStr,
+            transId: transId.toString(), // Ensure string
+            lang: "vi",
+            description: description,
+            signature: signature
+        };
+
+        console.log("Sending Refund to MoMo:", requestBody);
+
+        const refundEndpoint = "https://test-payment.momo.vn/v2/gateway/api/refund";
+
+        const response = await axios.post(refundEndpoint, requestBody);
+
+        console.log("MoMo Refund Response:", response.data);
+
+        return res.status(200).json(response.data);
+
+    } catch (error) {
+        console.error("Refund Error:", error.message);
+        if (error.response) {
+            console.error("MoMo Refund Error Body:", error.response.data);
+        }
+        return res.status(500).json({
+            message: "Internal Server Error",
+            details: error.message
+        });
+    }
+});
+
 
 app.listen(port, () => {
     console.log(`Backend running at http://localhost:${port}`);
