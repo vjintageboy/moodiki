@@ -82,6 +82,8 @@ class _ChatListPageState extends State<ChatListPage> {
         String displayName = 'Đang tải...';
         String appointmentTime = '';
         String avatarUrl = '';
+        String statusText = '';
+        Color statusColor = Colors.grey;
 
         if (snapshot.hasData && snapshot.data != null) {
           final appointment = snapshot.data!;
@@ -91,6 +93,24 @@ class _ChatListPageState extends State<ChatListPage> {
           final dateStr = DateFormat('dd/MM/yyyy').format(appointment.appointmentDate);
           final timeStr = DateFormat('HH:mm').format(appointment.appointmentDate);
           appointmentTime = 'Lịch hẹn: $timeStr - $dateStr';
+
+          // Determine status text and color
+          switch (appointment.status) {
+            case AppointmentStatus.cancelled:
+              statusText = ' • Đã hủy';
+              statusColor = Colors.red;
+              break;
+            case AppointmentStatus.completed:
+              statusText = ' • Đã hoàn thành';
+              statusColor = Colors.green;
+              break;
+            case AppointmentStatus.confirmed:
+              // Optional: ' • Sắp tới'
+              break;
+            default:
+              break;
+          }
+
         } else if (snapshot.connectionState == ConnectionState.done && snapshot.data == null) {
            // Fallback if appointment not found (rare)
            final otherUserId = chatRoom.participants.firstWhere(
@@ -126,13 +146,26 @@ class _ChatListPageState extends State<ChatListPage> {
               ),
               if (appointmentTime.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(
-                  appointmentTime,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue[700],
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      appointmentTime,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (statusText.isNotEmpty)
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ],
