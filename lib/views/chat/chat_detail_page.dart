@@ -11,12 +11,14 @@ class ChatDetailPage extends StatefulWidget {
   final String roomId;
   final String expertName;
   final String expertId;
+  final String? targetAvatarUrl; // Added for avatar display
 
   const ChatDetailPage({
     super.key,
     required this.roomId,
     required this.expertName,
     required this.expertId,
+    this.targetAvatarUrl,
   });
 
   @override
@@ -24,9 +26,10 @@ class ChatDetailPage extends StatefulWidget {
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
+  // ... existing state ...
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
-  final AppointmentService _appointmentService = AppointmentService(); // Need to fetch appointment
+  final AppointmentService _appointmentService = AppointmentService();
   final String _currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
   Appointment? _appointment;
@@ -38,12 +41,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     _loadAppointment();
   }
 
+  // ... _loadAppointment ...
   Future<void> _loadAppointment() async {
     try {
-      // 1. Get ChatRoom to find appointmentId
       final chatRoom = await _chatService.getChatRoom(widget.roomId);
       if (chatRoom != null) {
-        // 2. Get Appointment
         final appointment = await _appointmentService.getAppointmentById(chatRoom.appointmentId);
         if (mounted) {
           setState(() {
@@ -60,12 +62,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
   }
 
+  // ... _sendMessage ...
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
     
-    // Permission Check
     if (_appointment != null) {
-      // Fix: Compare with userId to determine if expert.
       final isExpert = _currentUserId != _appointment!.userId;
       final canSend = _chatService.canSendMessage(_appointment!, isExpert);
       if (!canSend) {
@@ -85,29 +86,24 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     _messageController.clear();
   }
 
+  // ... build ...
   @override
   Widget build(BuildContext context) {
-    // Determine permissions
+    // ... existing permission logic ...
     bool canSend = false;
     bool canVideo = false;
-    String? restrictionMessage;
+    bool isPreSession = false;
+    bool isCompleted = false;
+    bool isExpert = false;
 
     if (_appointment != null) {
-      // Fix: Compare with userId to determine if expert.
-      // If I am NOT the user, I must be the expert.
-      // (Assuming only 2 participants: user and expert)
-      final isExpert = _currentUserId != _appointment!.userId;
-      
+      isExpert = _currentUserId != _appointment!.userId;
       canSend = _chatService.canSendMessage(_appointment!, isExpert);
       canVideo = _chatService.canJoinVideoCall(_appointment!);
       
-      if (!canSend) {
-        restrictionMessage = 'Chat bị khóa. Vui lòng đợi đến giờ hẹn.';
-      } else if (!isExpert && _appointment!.status == AppointmentStatus.confirmed && 
-                 DateTime.now().isBefore(_appointment!.appointmentDate)) {
-        // Only show this restriction message to the User, not the Expert
-        restrictionMessage = 'Bạn chỉ có thể gửi câu hỏi ngắn trước buổi hẹn.';
-      }
+      isCompleted = _appointment!.status == AppointmentStatus.completed;
+      isPreSession = _appointment!.status == AppointmentStatus.confirmed && 
+                     DateTime.now().isBefore(_appointment!.appointmentDate);
     }
 
     return Scaffold(
@@ -118,7 +114,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             icon: Icon(Icons.videocam, color: canVideo ? Colors.blue : Colors.grey),
             onPressed: canVideo
                 ? () {
-                    // Video call logic
                      ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Tính năng gọi video sắp ra mắt')),
                     );
@@ -129,41 +124,30 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     );
                   },
           ),
+          IconButton(
+            icon: const Icon(Icons.emergency, color: Colors.red),
+            onPressed: () => _showSOSDialog(context),
+          ),
         ],
       ),
       body: Column(
         children: [
-          if (restrictionMessage != null)
+          if (_appointment != null)
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              color: Colors.orange.shade100,
-              child: Text(
-                restrictionMessage,
-                style: TextStyle(color: Colors.orange.shade900, fontSize: 12),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.blue.shade50,
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 16, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Lịch hẹn: ${DateFormat('HH:mm - dd/MM/yyyy').format(_appointment!.appointmentDate)}',
+                    style: TextStyle(color: Colors.blue.shade900, fontWeight: FontWeight.w500),
+                  ),
+                ],
               ),
             ),
-          // DEBUG INFO
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(4),
-            color: Colors.yellow.shade100,
-            child: Column(
-              children: [
-                Text('Room ID: ${widget.roomId}', style: const TextStyle(fontSize: 10)),
-                FutureBuilder<ChatRoom?>(
-                  future: _chatService.getChatRoom(widget.roomId),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Text('Participants: ${snapshot.data!.participants}', style: const TextStyle(fontSize: 10));
-                    }
-                    return const Text('Loading participants...', style: TextStyle(fontSize: 10));
-                  },
-                ),
-              ],
-            ),
-          ),
+            
           Expanded(
             child: StreamBuilder<List<ChatMessage>>(
               stream: _chatService.getChatStream(widget.roomId),
@@ -203,34 +187,63 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       );
                     }
 
-                    return Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isMe ? Colors.blue : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              message.content,
-                              style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black,
-                              ),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                      child: Row(
+                        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          // Avatar for incoming messages
+                          if (!isMe) ...[
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Colors.grey[300],
+                              backgroundImage: widget.targetAvatarUrl != null && widget.targetAvatarUrl!.isNotEmpty
+                                  ? NetworkImage(widget.targetAvatarUrl!)
+                                  : null,
+                              child: (widget.targetAvatarUrl == null || widget.targetAvatarUrl!.isEmpty)
+                                  ? const Icon(Icons.person, size: 16, color: Colors.grey)
+                                  : null,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              DateFormat('HH:mm').format(message.timestamp),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isMe ? Colors.white70 : Colors.black54,
-                              ),
-                            ),
+                            const SizedBox(width: 8),
                           ],
-                        ),
+
+                          // Message Bubble
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isMe ? Colors.blue : Colors.grey[200],
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(16),
+                                  topRight: const Radius.circular(16),
+                                  bottomLeft: Radius.circular(isMe ? 16 : 4),
+                                  bottomRight: Radius.circular(isMe ? 4 : 16),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    message.content,
+                                    style: TextStyle(
+                                      color: isMe ? Colors.white : Colors.black87,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    DateFormat('HH:mm').format(message.timestamp),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: isMe ? Colors.white70 : Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -238,28 +251,159 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    enabled: canSend,
-                    decoration: InputDecoration(
-                      hintText: canSend ? 'Nhập tin nhắn...' : 'Chat đang bị khóa',
-                      border: const OutlineInputBorder(),
-                      filled: !canSend,
-                      fillColor: !canSend ? Colors.grey.shade100 : null,
-                    ),
-                  ),
+          
+          // Dynamic Footer
+          if (canSend)
+            _buildFullChatInput()
+          else if (isPreSession && !isExpert)
+            _buildRestrictedFooter()
+          else if (!isExpert)
+             Container(
+              padding: const EdgeInsets.all(16),
+              color: Colors.grey.shade100,
+              child: const Center(
+                child: Text(
+                  'Chat đã bị khóa.',
+                  style: TextStyle(color: Colors.grey),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send, color: canSend ? Colors.blue : Colors.grey),
-                  onPressed: canSend ? _sendMessage : null,
-                ),
-              ],
+              ),
+            )
+           else 
+             // Expert view when chat is locked (e.g. cancelled)
+             const SizedBox.shrink(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFullChatInput() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: const InputDecoration(
+                hintText: 'Nhập tin nhắn...',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
             ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.send, color: Colors.blue),
+            onPressed: _sendMessage,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRestrictedFooter() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.orange.shade50,
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Colors.orange),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              "Chat đầy đủ sẽ mở sau buổi tham vấn.",
+              style: TextStyle(color: Colors.deepOrange, fontSize: 13),
+            ),
+          ),
+          TextButton(
+            onPressed: _openShortQuestionForm,
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.orange.shade100,
+              foregroundColor: Colors.deepOrange,
+            ),
+            child: const Text("Gửi câu hỏi"),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _openShortQuestionForm() {
+    final TextEditingController questionController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gửi câu hỏi ngắn'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Bạn có thể gửi trước câu hỏi hoặc vấn đề cần tư vấn để chuyên gia chuẩn bị.',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: questionController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Nhập câu hỏi của bạn...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (questionController.text.trim().isNotEmpty) {
+                _chatService.sendMessage(
+                  roomId: widget.roomId,
+                  senderId: _currentUserId,
+                  content: '[Câu hỏi trước buổi hẹn]: ${questionController.text.trim()}',
+                );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đã gửi câu hỏi thành công!')),
+                );
+              }
+            },
+            child: const Text('Gửi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSOSDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Trợ giúp khẩn cấp'),
+          ],
+        ),
+        content: const Text(
+          'Nếu bạn hoặc ai đó đang gặp nguy hiểm, vui lòng gọi ngay cho các số điện thoại khẩn cấp (113, 115) hoặc đến cơ sở y tế gần nhất.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              // Implement call action here
+              Navigator.pop(context);
+            },
+            child: const Text('Gọi 115', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

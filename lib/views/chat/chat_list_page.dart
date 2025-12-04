@@ -9,6 +9,7 @@ import '../../models/appointment.dart';
 import 'chat_detail_page.dart';
 import '../../services/firestore_service.dart';
 import '../../models/user_profile.dart';
+import '../../models/app_user.dart';
 
 class ChatListPage extends StatefulWidget {
   const ChatListPage({super.key});
@@ -110,15 +111,15 @@ class _ChatListPageState extends State<ChatListPage> {
 
           if (isExpert) {
             // If I am the expert, I want to see the User's info
-            return FutureBuilder<UserProfile?>(
-              future: _firestoreService.getUserProfile(appointment.userId),
+            return FutureBuilder<Map<String, String>>(
+              future: _fetchUserInfo(appointment.userId),
               builder: (context, userSnapshot) {
                 String displayName = 'Người dùng';
                 String avatarUrl = '';
                 
-                if (userSnapshot.hasData && userSnapshot.data != null) {
-                  displayName = userSnapshot.data!.fullName;
-                  avatarUrl = userSnapshot.data!.avatarUrl ?? '';
+                if (userSnapshot.hasData) {
+                  displayName = userSnapshot.data!['name'] ?? 'Người dùng';
+                  avatarUrl = userSnapshot.data!['avatar'] ?? '';
                 }
                 
                 return _buildTile(context, chatRoom, appointment, displayName, avatarUrl, isExpert);
@@ -259,6 +260,7 @@ class _ChatListPageState extends State<ChatListPage> {
               roomId: chatRoom.id,
               expertName: displayName, // Reusing this field for "Target Name"
               expertId: targetId,      // Reusing this field for "Target ID"
+              targetAvatarUrl: avatarUrl, // Pass the avatar URL
             ),
           ),
         );
@@ -266,5 +268,30 @@ class _ChatListPageState extends State<ChatListPage> {
     );
   }
   
+  Future<Map<String, String>> _fetchUserInfo(String userId) async {
+    String displayName = 'Người dùng';
+    String avatarUrl = '';
+
+    try {
+      // 1. Try UserProfile
+      final profile = await _firestoreService.getUserProfile(userId);
+      if (profile != null && profile.fullName.isNotEmpty) {
+        displayName = profile.fullName;
+        avatarUrl = profile.avatarUrl ?? '';
+      } else {
+        // 2. Fallback to AppUser
+        final appUser = await _firestoreService.getUser(userId);
+        if (appUser != null) {
+          displayName = appUser.displayName.isNotEmpty ? appUser.displayName : 'Người dùng';
+          avatarUrl = appUser.photoUrl ?? '';
+        }
+      }
+    } catch (e) {
+      print('Error fetching user info: $e');
+    }
+    
+    return {'name': displayName, 'avatar': avatarUrl};
+  }
+
   int min(int a, int b) => a < b ? a : b;
 }
