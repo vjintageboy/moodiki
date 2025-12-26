@@ -1,0 +1,58 @@
+[33me222566[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;32mtest-call_video[m[33m)[m  tích hợp zegocloud cho cuộc gọi chưa test đc máy
+[33md50c97c[m sửa giao điện chat
+[33mbf71dc9[m chat giữa user và expert thành công
+[33m9d7b7ea[m trạng thái  tin nhắn
+[33m7b1ef94[m phát triển phần tin nhắn
+[33m4355123[m fix lỗi hoàn tiền
+[33m89e3e31[m hoàn tiền MOMO- hủy lịch hẹn
+[33m5f1f503[m Tự kiểm tra thanh toán_MOMO
+[33m63f05a4[m Thanh toán momo thành công
+[33m381476c[m Thêm thanh toán Momo backend và update pament page
+[33m6338561[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Thêm chức năng xem lịch hẹn: bổ sung tab lịch và hiển thị lịch hẹn theo ngày cho người dùng.
+[33m487e473[m Fixbug logic thống kê trên trang quản trị: phân loại người dùng theo vai trò experts
+[33mc0a216a[m Cải thiện hộp thoại đặt lại mật khẩu: thêm padding và cấu trúc lại nội dung để nâng cao trải nghiệm người dùng.
+[33m7508445[m Thêm chức năng đặt lại mật khẩu: hiển thị hộp thoại cho người dùng nhập email và gửi yêu cầu đặt lại mật khẩu.
+[33md8a235a[m Thêm mô tả cho việc chọn biểu tượng cảm xúc, hướng dẫn về yếu tố cảm xúc và placeholder cho ghi chú tâm trạng trong giao diện người dùng.
+[33mc488fe5[m Cải thiện giao diện người dùng: cho phép tiêu đề mở rộng ra sau thanh trạng thái và căn giữa các mục điều hướng
+[33m590caca[m Thêm trang quản lý tin tức cho quản trị viên: cho phép xem, chỉnh sửa, xóa và tìm kiếm bài viết.
+[33m15a24b9[m Thêm chức năng lọc và sắp xếp bài viết: cho phép người dùng chọn lọc theo tác giả và sắp xếp theo thời gian, độ hot, số lượt thích và bình luận.
+[33m1e77b39[m Xóa các câu lệnh print không cần thiết để làm sạch mã nguồn và cải thiện hiệu suất.
+[33m5ddaf50[m Cập nhật quy tắc Firestore cho phép tác giả bài viết xóa bình luận; cải thiện giao diện người dùng với menu hành động cho bài viết của chính họ.
+[33m1faabc1[m Cải thiện xử lý avatar người dùng: lấy từ nhiều nguồn và thêm kiểm tra Base64 cho ảnh đại diện
+[33ma2b3599[m Thêm chip phân loại 'News' vào trang tin tức
+[33ma86ab16[m Thêm chỉ mục cho trường 'category' và 'createdAt' trong 'newsPosts'; cải thiện xử lý lỗi và giao diện người dùng khi tải bài viết.
+[33m06d3cc5[m Cập nhật quy tắc Firestore cho phép người dùng đã xác thực cập nhật trường 'likedBy' và 'commentCount' trong bài viết; cải thiện hiển thị số lượng bình luận theo thời gian thực trên trang tin tức.
+[33m6c6b5d4[m Thêm quy tắc cho phép người dùng đã xác thực cập nhật bài viết để chuyển đổi thích, chỉ cho phép cập nhật trường 'likedBy'.
+[33mb90f33e[m Cập nhật padding cho phần nhập bình luận trong trang chi tiết bài viết
+[33m089a8b7[m Thêm tính năng chuyển đổi bình luận ẩn danh với biểu tượng người dùng có thể nhấn và cập nhật thông báo trong trường nhập bình luận.
+[33m54a712b[m thêm biểu tượng người dùng, điều chỉnh bố cục và cải thiện trải nghiệm người dùng cho tính năng bình luận ẩn danh.
+[33m29a3483[m Cập nhật AuthWrapper để sử dụng key cho việc tái xây dựng khi trạng thái xác thực thay đổi; thêm kiểm tra vai trò người dùng trong trang đăng nhập và đăng ký.
+[33mff3ddf2[m Cập nhật trạng thái tải dữ liệu trong trang phân tích và xử lý lỗi khi tải phân tích
+[33m0baa590[m Thêm chỉ mục cho bộ sưu tập bình luận và xử lý lỗi khi tải bình luận trong trang chi tiết bài viết
+[33m20856e7[m Thêm tính năng đăng bài và bình luận ẩn danh
+[33m3d0f916[m Thêm cấu hình chỉ mục cho bộ sưu tập cuộc hẹn
+[33m86c146f[m Thêm model PostComment.
+[33me0cd887[m Thêm trang phân tích vào bảng điều khiển chuyên gia và cập nhật điều hướng đến trang phân tích.
+[33ma93f586[m Fix bug: sử dụng ID hồ sơ để kiểm tra xung đột lịch hẹn và cải thiện thông báo lỗi khi không tìm thấy hồ sơ.
+[33ma755b55[m Cập nhật quyền truy cập cho expertUsers: cho phép tất cả người dùng đọc thông tin
+[33m5740c07[m Cập nhật quyền truy cập cho chuyên gia: cho phép cập nhật trường khả dụng và đồng bộ hóa tóm tắt đến bộ sưu tập chuyên gia. Thêm kiểm tra xung đột lịch hẹn khi thay đổi lịch làm việc.
+[33m86388fc[m Cập nhật quyền truy cập cho người dùng đã xác thực để truy vấn lịch hẹn theo expertId.
+[33md2e8ab8[m Thêm chức năng quản lý lịch cho chuyên gia: cho phép thiết lập thời gian làm việc, ngày nghỉ và thời gian nghỉ.
+[33m4bffc09[m Thêm nút quay lại cho trang quản lý cuộc hẹn khi có thể điều hướng
+[33md666810[m Thêm thông tin hủy cuộc hẹn: lưu trữ ai đã hủy và lý do hủy cho cuộc hẹn
+[33m310358a[m Thêm chức năng hủy cuộc hẹn với lý do
+[33md15b617[m Thêm quyền đọc cho chuyên gia để truy cập thông tin người dùng
+[33m7a57ed6[m Thêm chức năng kiểm tra xung đột thời gian cho cuộc hẹn: kiểm tra xung đột với lịch của chuyên gia và người dùng trước khi tạo cuộc hẹn. Cập nhật giao diện quản lý cuộc hẹn cho chuyên gia, bao gồm trang chi tiết cuộc hẹn và danh sách cuộc hẹn.
+[33mffb85e5[m Thêm chức năng cập nhật hồ sơ người dùng: cho phép người dùng và chuyên gia cập nhật thông tin cá nhân, bao gồm số điện thoại, giới tính và ngày sinh. Cập nhật quy tắc Firestore để xác định các bộ sưu tập cần cập nhật dựa trên vai trò người dùng.
+[33m7c388a6[m Cập nhật quy tắc Firestore để giới hạn quyền cập nhật của admin chỉ cho phép thay đổi các trường cụ thể: role, isBanned, banReason, bannedAt. Thêm bài kiểm tra bảo mật cho các quyền của admin.
+[33mff501bd[m xoá các file thừa của admin trong homePage khi chuyển sang dùng AdminMainPage
+[33m23d65c5[m chỉnh sửa lỗi stack flow khi user đăng ký 1 lịch tham vấn tâm lý xong rồi khi ấn vào view lịch sẽ bị return về trang welcome pages
+[33m4b0db57[m thay đổi ui quản lý của admin, không tích hợp các tính năng của người dùng vào admin nữa
+[33m522ed89[m Thêm chức năng quản lý người dùng chuyên gia: cập nhật quy tắc Firestore, thêm trang điều khiển cho chuyên gia và cải thiện giao diện người dùng.
+[33mcb1223f[m Cập nhật quy trình tạo và phê duyệt người dùng chuyên gia: thay đổi vai trò từ 'expert' sang 'user' cho đến khi được phê duyệt, thêm cờ chỉ định đơn đăng ký chuyên gia.
+[33m0ff813d[m Thêm quy tắc quản lý người dùng chuyên gia vào Firestore và cập nhật giao diện trang chào mừng để hỗ trợ đăng ký chuyên gia.
+[33m74b58f9[m Thêm nút 'Quản lý Chuyên gia' vào bảng điều khiển quản trị viên và điều chỉnh khoảng cách giữa các nút.
+[33mabc9fbe[m Thêm trang quản lý chuyên gia và trang chờ phê duyệt cho người dùng chuyên gia. Cập nhật giao diện và thêm tính năng đăng ký cho chuyên gia.
+[33m4889270[m Thêm dịch vụ quản lý người dùng chuyên gia: đăng ký, xác thực, phê duyệt và quản lý trạng thái
+[33m0ebf49e[m Thêm vai trò 'expert' cho người dùng và tạo mô hình ExpertUser với thông tin chi tiết về chuyên gia
+[33m82a7de1[m thêm th

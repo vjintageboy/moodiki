@@ -39,31 +39,24 @@ service cloud.firestore {
     // USERS COLLECTION (NEW - for admin system)
     // ============================================
     match /users/{userId} {
-      // Anyone authenticated can read their own user doc
-      allow read: if isOwner(userId);
+      // ✅ Cho phép tạo document lần đầu
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+
+      // ✅ Cho phép đọc & cập nhật sau khi đã tồn tại
+      allow read, update, delete: if isAuthenticated() && request.auth.uid == userId;
       
-      // Experts can read user info for their appointments
-      // This is needed for appointment detail page
-      allow read: if isExpert();
+      // ✅ Allow owner access to all subcollections (e.g. notifications, settings)
+      match /{document=**} {
+         allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
       
-      // User can create their own profile on signup
-      allow create: if isOwner(userId);
-      
-      // User can update their own profile (except role, isBanned, banReason)
-      allow update: if isOwner(userId) && 
-                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isBanned', 'banReason', 'bannedAt']);
-      
-      // Admin can ONLY update specific fields: role, isBanned, banReason, bannedAt
-      // This prevents admin from modifying user's displayName, email, etc.
-      allow update: if isAdmin() && 
-                       request.resource.data.diff(resource.data)
-                       .affectedKeys().hasOnly(['role', 'isBanned', 'banReason', 'bannedAt']);
-      
-      // Admin can read all users
+      // Admin permissions
       allow read: if isAdmin();
-      
-      // Admin can delete users
+      allow update: if isAdmin();
       allow delete: if isAdmin();
+
+      // Experts need limited read access (e.g. for appointments)
+      allow read: if isExpert();
     }
     
     // ============================================
@@ -277,6 +270,26 @@ service cloud.firestore {
       
       // Admin can manage all comments
       allow write: if isAdmin();
+    }
+
+    // ============================================
+    // CHAT SYSTEM
+    // ============================================
+    match /chat_rooms/{roomId} {
+      // Allow users to read/write chat rooms they are part of
+      allow read: if isAuthenticated() && resource.data.participants.hasAny([request.auth.uid]);
+      // Allow creation if user includes themselves in participants
+      allow create: if isAuthenticated() && request.resource.data.participants.hasAny([request.auth.uid]);
+      // Allow updates if user is participant
+      allow update: if isAuthenticated() && resource.data.participants.hasAny([request.auth.uid]);
+      
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/chat_rooms/$(roomId)).data.participants.hasAny([request.auth.uid]);
+        allow create: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/chat_rooms/$(roomId)).data.participants.hasAny([request.auth.uid]);
+      }
     }
   }
 }

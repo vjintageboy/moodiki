@@ -104,6 +104,9 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
 
+      // 🔑 ENSURE USER DOCUMENT EXISTS
+      await _firestoreService.ensureUserDocument(userCredential.user);
+
       // ⭐ CHECK IF USER IS BANNED
       final isBanned = await _firestoreService.isUserBanned(userCredential.user!.uid);
       

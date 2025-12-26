@@ -15,12 +15,16 @@ import 'widgets/duration_selector.dart';
 import 'mock_payment_page.dart';
 
 class BookingPage extends StatefulWidget {
-  final Expert expert;
+  final Expert? expert;
+  final String? expertId;
+  final String? chatRoomId;
 
   const BookingPage({
     super.key,
-    required this.expert,
-  });
+    this.expert,
+    this.expertId,
+    this.chatRoomId,
+  }) : assert(expert != null || expertId != null, 'Either expert or expertId must be provided');
 
   @override
   State<BookingPage> createState() => _BookingPageState();
@@ -30,6 +34,9 @@ class _BookingPageState extends State<BookingPage> {
   final AppointmentService _appointmentService = AppointmentService();
   final AvailabilityService _availabilityService = AvailabilityService();
   final TextEditingController _notesController = TextEditingController();
+
+  Expert? _expert;
+  bool _isLoadingExpert = true;
 
   // Selections
   CallType _selectedCallType = CallType.video;
@@ -46,8 +53,71 @@ class _BookingPageState extends State<BookingPage> {
   @override
   void initState() {
     super.initState();
-    // Don't auto-select a day - let user choose
     _focusedDay = DateTime.now();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    if (widget.expert != null) {
+      if (mounted) {
+        setState(() {
+          _expert = widget.expert;
+          _isLoadingExpert = false;
+        });
+      }
+    } else if (widget.expertId != null) {
+        await _loadExpertById(widget.expertId!);
+    }
+  }
+
+  Future<void> _loadExpertById(String id) async {
+    try {
+      Expert? loadedExpert;
+      
+      // 1. Try treating ID as Expert Profile ID first (most common)
+      // Actually, from Chat, we receive Auth ID.
+      // Let's check expertUsers to map Auth ID -> Profile ID
+      String profileId = id;
+      
+      // Check if this ID exists in expertUsers as 'uid'
+      final expertUserByUid = await FirebaseFirestore.instance
+          .collection('expertUsers')
+          .where('uid', isEqualTo: id)
+          .limit(1)
+          .get();
+
+      if (expertUserByUid.docs.isNotEmpty) {
+         profileId = expertUserByUid.docs.first.data()['expertId'];
+      }
+      
+      // Now fetch from experts collection
+      final doc = await FirebaseFirestore.instance.collection('experts').doc(profileId).get();
+      if (doc.exists) {
+        loadedExpert = Expert.fromSnapshot(doc);
+      } else {
+        // Fallback: maybe ID was Profile ID directly?
+         final docDirect = await FirebaseFirestore.instance.collection('experts').doc(id).get();
+           if (docDirect.exists) {
+            loadedExpert = Expert.fromSnapshot(docDirect);
+          }
+      }
+
+      if (mounted) {
+        setState(() {
+          _expert = loadedExpert;
+          _isLoadingExpert = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading expert: $e');
+      if (mounted) {
+        setState(() => _isLoadingExpert = false);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load expert info: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -57,12 +127,14 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Future<void> _loadAvailableSlots(DateTime date) async {
+    if (_expert == null) return;
+    
     setState(() => _isLoadingSlots = true);
 
     try {
       // Check if expert is available on this day
       final weekday = DateFormat('EEEE').format(date);
-      if (!widget.expert.availability.contains(weekday)) {
+      if (!_expert!.availability.contains(weekday)) {
         // Expert not available on this day - show no slots
         setState(() {
           _availableTimeSlots = [];
@@ -78,7 +150,7 @@ class _BookingPageState extends State<BookingPage> {
         // Query expertUsers to find which user owns this expert profile
         final expertUsersQuery = await FirebaseFirestore.instance
             .collection('expertUsers')
-            .where('expertId', isEqualTo: widget.expert.expertId)
+            .where('expertId', isEqualTo: _expert!.expertId)
             .limit(1)
             .get();
         
@@ -109,7 +181,7 @@ class _BookingPageState extends State<BookingPage> {
 
       // Get booked slots from Firestore
       _bookedTimeSlots = await _appointmentService.getBookedTimeSlots(
-        widget.expert.expertId,
+        _expert!.expertId,
         date,
       );
 
@@ -191,14 +263,16 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   bool _isDayAvailable(DateTime day) {
+    if (_expert == null) return false;
     // Check if day is in expert's availability
     final weekday = DateFormat('EEEE').format(day);
-    return widget.expert.availability.contains(weekday);
+    return _expert!.availability.contains(weekday);
   }
 
   double get _currentPrice {
+    if (_expert == null) return 0.0;
     return Appointment.calculatePrice(
-      expertBasePrice: widget.expert.pricePerSession,
+      expertBasePrice: _expert!.pricePerSession,
       callType: _selectedCallType,
       duration: _selectedDuration,
     );
@@ -214,11 +288,12 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    if (_expert == null) return;
     if (!_isDayAvailable(selectedDay)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${widget.expert.fullName} is not available on ${DateFormat('EEEE').format(selectedDay)}',
+            '${_expert!.fullName} is not available on ${DateFormat('EEEE').format(selectedDay)}',
           ),
           backgroundColor: Colors.orange,
         ),
@@ -265,6 +340,8 @@ class _BookingPageState extends State<BookingPage> {
       return;
     }
 
+    if (_expert == null) return;
+
     // Parse selected date and time
     final appointmentDateTime = _parseSlotTime(_selectedDay!, _selectedTimeSlot!);
 
@@ -272,10 +349,10 @@ class _BookingPageState extends State<BookingPage> {
     final appointment = Appointment(
       appointmentId: '', // Will be set by service
       userId: user.uid,
-      expertId: widget.expert.expertId,
-      expertName: widget.expert.displayName,
-      expertAvatarUrl: widget.expert.avatarUrl,
-      expertBasePrice: widget.expert.pricePerSession, // ✅ Save expert base price
+      expertId: _expert!.expertId,
+      expertName: _expert!.displayName,
+      expertAvatarUrl: _expert!.avatarUrl,
+      expertBasePrice: _expert!.pricePerSession, // ✅ Save expert base price
       callType: _selectedCallType,
       appointmentDate: appointmentDateTime,
       durationMinutes: _selectedDuration,
@@ -347,6 +424,20 @@ class _BookingPageState extends State<BookingPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingExpert) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (_expert == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: const Center(child: Text('Expert not found')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -378,12 +469,12 @@ class _BookingPageState extends State<BookingPage> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: widget.expert.avatarUrl != null
-                        ? NetworkImage(widget.expert.avatarUrl!)
+                    backgroundImage: _expert!.avatarUrl != null
+                        ? NetworkImage(_expert!.avatarUrl!)
                         : null,
-                    child: widget.expert.avatarUrl == null
+                    child: _expert!.avatarUrl == null
                         ? Text(
-                            widget.expert.fullName[0].toUpperCase(),
+                            _expert!.fullName[0].toUpperCase(),
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -397,7 +488,7 @@ class _BookingPageState extends State<BookingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.expert.displayName,
+                          _expert!.displayName,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -405,7 +496,7 @@ class _BookingPageState extends State<BookingPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.expert.specialization,
+                          _expert!.specialization,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -441,7 +532,7 @@ class _BookingPageState extends State<BookingPage> {
               child: DurationSelector(
                 selectedDuration: _selectedDuration,
                 callType: _selectedCallType,
-                expertBasePrice: widget.expert.pricePerSession, // ✅ Pass expert base price
+                expertBasePrice: _expert!.pricePerSession, // ✅ Pass expert base price
                 onChanged: _onDurationChanged,
               ),
             ),
@@ -700,16 +791,16 @@ class _BookingPageState extends State<BookingPage> {
                     Expanded(
                       child: Text(
                         'You can cancel up to 4 hours before your appointment',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.orange.shade700,
-                        fontWeight: FontWeight.w600,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.orange.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             ],
 
             const SizedBox(height: 80),

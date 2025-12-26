@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_profile.dart';
 import '../models/mood_entry.dart';
 import '../models/streak.dart';
@@ -590,14 +591,51 @@ class FirestoreService {
     }
   }
 
+  /// Ensure user document exists (fix for permission-denied errors)
+  Future<void> ensureUserDocument(User? user) async {
+    if (user == null) {
+      print('⚠️ ensureUserDocument called with null user');
+      return;
+    }
+    try {
+      print('🔍 Ensuring user document for UID: ${user.uid} (Auth User)');
+      final docRef = _db.collection('users').doc(user.uid);
+      final docSnap = await docRef.get();
+
+      if (!docSnap.exists) {
+        print('📝 Document does not exist, creating for UID: ${user.uid}');
+        await docRef.set({
+          'uid': user.uid,
+          'email': user.email,
+          'displayName': user.displayName ?? '',
+          'photoUrl': user.photoURL,
+          'role': 'user', // Default role
+          'isBanned': false,
+          'createdAt': FieldValue.serverTimestamp(),
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        });
+        print('✅ User document ensured/created: ${user.uid}');
+      } else {
+         print('ℹ️ User document already exists for: ${user.uid}');
+      }
+    } catch (e) {
+      print('❌ Error ensuring user document for ${user.uid}: $e');
+      // Non-fatal, let the flow continue, but subsequent calls might fail if doc is strictly required
+    }
+  }
+
   /// Update last login timestamp
   Future<void> updateLastLogin(String uid) async {
     try {
-      await _db.collection('users').doc(uid).update({
+      print('🔄 Updating last login for UID: $uid');
+      // Use set with merge: true to avoid 'permission-denied' if document doesn't restrict creation but restricts update to fields
+      // and also generally safer if we want to ensure it works even if doc is slightly malformed
+      await _db.collection('users').doc(uid).set({
         'lastLoginAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
+      print('✅ Last login updated for $uid');
     } catch (e) {
-      print('❌ Error updating last login: $e');
+      print('❌ Error updating last login for $uid: $e');
     }
   }
 

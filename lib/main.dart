@@ -162,9 +162,17 @@ class AuthWrapper extends StatelessWidget {
   Future<Map<String, dynamic>> _checkUserStatus(String uid) async {
     try {
       final firestore = FirebaseFirestore.instance;
+      // We don't use ensureUserDocument here because we expect AuthProvider to have handled it during login.
+      // However, if we are auto-logging in via persistent state, it might not have run ensureUserDocument recently.
+      // But typically, persistent login implies valid previous session.
+      // If we encounter permission-denied here, it's likely a critical rules/data mismatch.
+      
       final doc = await firestore.collection('users').doc(uid).get();
       
       if (!doc.exists) {
+        // If doc doesn't exist, we might be in a weird state where user is Auth-ed but no Firestore doc.
+        // We return default user role so they can enter the app.
+        // The side effect is they might see a fresh profile.
         return {
           'isBanned': false,
           'role': 'user',
@@ -178,7 +186,8 @@ class AuthWrapper extends StatelessWidget {
         'banReason': data?['banReason'],
       };
     } catch (e) {
-      print('Error checking user status: $e');
+      print('❌ Error checking user status: $e');
+      // Return safe defaults to allow app entry rather than infinite loading or crash
       return {
         'isBanned': false,
         'role': 'user',
