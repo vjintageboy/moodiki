@@ -1,14 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/appointment.dart';
-import 'momo_service.dart';
 import 'chat_service.dart';
 import 'notification_service.dart';
 import 'supabase_service.dart';
 
 class AppointmentService {
   final SupabaseClient _supabase = SupabaseService.instance.client;
-  final MomoService _momoService = MomoService();
   final NotificationService _notificationService = NotificationService();
   final ChatService _chatService = ChatService();
 
@@ -54,8 +52,8 @@ class AppointmentService {
             'duration_minutes': appointment.durationMinutes,
             'status': appointment.status.name,
             'user_notes': appointment.userNotes,
-            'total_price': appointment.price, // Calculate price if needed
-            'call_type': appointment.callType.name,
+            'expert_base_price': appointment.expertBasePrice.round(),
+            'call_type': _mapCallTypeToDb(appointment.callType),
           })
           .select()
           .single();
@@ -78,6 +76,14 @@ class AppointmentService {
       debugPrint('❌ Error creating appointment: $e');
       rethrow;
     }
+  }
+
+  String _mapCallTypeToDb(CallType callType) {
+    // Schema currently uses call_type enum with default 'chat'.
+    // Keep backward compatibility:
+    // - voice -> chat
+    // - video -> video
+    return callType == CallType.voice ? 'chat' : 'video';
   }
 
   // ===========================================================================
@@ -225,7 +231,39 @@ class AppointmentService {
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .order('appointment_date', ascending: false)
-        .map((data) => data.map((m) => Appointment.fromMap(m)).toList());
+        .asyncMap((data) async {
+          if (data.isEmpty) return <Appointment>[];
+
+          final expertIds = data
+              .map((m) => m['expert_id'])
+              .where((id) => id != null)
+              .map((id) => id.toString())
+              .toSet()
+              .toList();
+
+          final expertsData = expertIds.isEmpty
+              ? <Map<String, dynamic>>[]
+              : List<Map<String, dynamic>>.from(
+                  await _supabase
+                      .from('experts')
+                      .select(
+                        'id, hourly_rate, bio, specialization, users!id(full_name, avatar_url)',
+                      )
+                      .inFilter('id', expertIds),
+                );
+
+          final expertsMap = {
+            for (final e in expertsData) e['id']?.toString(): e,
+          };
+
+          final enriched = data.map((m) {
+            final row = Map<String, dynamic>.from(m);
+            row['experts'] = expertsMap[row['expert_id']?.toString()];
+            return Appointment.fromMap(row);
+          }).toList();
+
+          return enriched;
+        });
   }
 
   // ===========================================================================
@@ -245,7 +283,6 @@ class AppointmentService {
       RefundStatus refundStatus = RefundStatus.none;
 
       String? paymentId = appointment.paymentId;
-      String? transId = appointment.paymentTransId;
 
       if (paymentId != null) {
         // Mock Payment

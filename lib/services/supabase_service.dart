@@ -164,14 +164,57 @@ class SupabaseService {
   /// Lấy danh sách tất cả expert đã được phê duyệt
   Future<List<Map<String, dynamic>>> getApprovedExperts() async {
     try {
-      // Join với bảng users để lấy thêm full_name, avatar_url
-      final response = await _supabase
+      // Primary: only approved experts
+      var experts = await _supabase
           .from('experts')
-          .select('*, users!id(full_name, avatar_url, email)')
+          .select()
           .eq('is_approved', true)
           .order('rating', ascending: false);
-      return List<Map<String, dynamic>>.from(response);
+
+      var expertList = List<Map<String, dynamic>>.from(experts);
+
+      // Fallback: if no approved experts, show all experts to avoid empty UX
+      if (expertList.isEmpty) {
+        experts = await _supabase
+            .from('experts')
+            .select()
+            .order('rating', ascending: false);
+        expertList = List<Map<String, dynamic>>.from(experts);
+      }
+
+      if (expertList.isEmpty) return [];
+
+      final expertIds = expertList
+          .map((e) => e['id'])
+          .where((id) => id != null)
+          .map((id) => id.toString())
+          .toSet()
+          .toList();
+
+      List<Map<String, dynamic>> users = [];
+      if (expertIds.isNotEmpty) {
+        try {
+          users = List<Map<String, dynamic>>.from(
+            await _supabase
+                .from('users')
+                .select('id, full_name, avatar_url, email')
+                .inFilter('id', expertIds),
+          );
+        } catch (e) {
+          // Keep experts visible even if users table query fails due RLS
+          debugPrint('⚠️ users query failed in getApprovedExperts: $e');
+        }
+      }
+
+      final usersMap = {for (final u in users) u['id']?.toString(): u};
+
+      return expertList.map((e) {
+        final enriched = Map<String, dynamic>.from(e);
+        enriched['users'] = usersMap[e['id']?.toString()];
+        return enriched;
+      }).toList();
     } catch (e) {
+      debugPrint('❌ getApprovedExperts error: $e');
       return [];
     }
   }
@@ -179,13 +222,30 @@ class SupabaseService {
   /// Lấy thông tin 1 expert theo id
   Future<Map<String, dynamic>?> getExpertById(String expertId) async {
     try {
-      final response = await _supabase
+      final expert = await _supabase
           .from('experts')
-          .select('*, users!id(full_name, avatar_url, email)')
+          .select()
           .eq('id', expertId)
-          .single();
-      return response;
+          .maybeSingle();
+
+      if (expert == null) return null;
+
+      Map<String, dynamic>? user;
+      try {
+        user = await _supabase
+            .from('users')
+            .select('id, full_name, avatar_url, email')
+            .eq('id', expertId)
+            .maybeSingle();
+      } catch (e) {
+        debugPrint('⚠️ users query failed in getExpertById: $e');
+      }
+
+      final enriched = Map<String, dynamic>.from(expert);
+      enriched['users'] = user;
+      return enriched;
     } catch (e) {
+      debugPrint('❌ getExpertById error: $e');
       return null;
     }
   }

@@ -16,8 +16,8 @@ class GeminiConfig {
   static const String modelName = 'gemini-2.5-flash'; // Free tier model
 
   // Safety settings
-  static const double temperature = 0.7; // Creativity level (0.0 - 1.0)
-  static const int maxOutputTokens = 1000; // Max response length
+static const double temperature = 0.5;
+static const int maxOutputTokens = 512;
 
   // System prompt - Personality của AI chatbot
   static const String systemPrompt = '''

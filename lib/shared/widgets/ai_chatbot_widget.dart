@@ -123,7 +123,7 @@ class _ChatPanel extends StatelessWidget {
 class _ChatHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final chatbot = context.read<ChatbotProvider>();
+    final chatbot = context.watch<ChatbotProvider>();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -167,6 +167,70 @@ class _ChatHeader extends StatelessWidget {
             ),
           ),
           IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  return Consumer<ChatbotProvider>(
+                    builder: (context, chatbot, _) {
+                      final conversations = chatbot.conversations;
+
+                      if (conversations.isEmpty) {
+                        return const SizedBox(
+                          height: 220,
+                          child: Center(
+                            child: Text('No conversation history yet'),
+                          ),
+                        );
+                      }
+
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: ListView.separated(
+                          itemCount: conversations.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final c = conversations[index];
+                            final title = c.title.trim().isNotEmpty
+                                ? c.title
+                                : (c.lastMessagePreview?.isNotEmpty == true
+                                      ? c.lastMessagePreview!
+                                      : 'Conversation');
+
+                            return ListTile(
+                              selected: c.id == chatbot.activeConversationId,
+                              leading: const Icon(Icons.forum_outlined),
+                              title: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                c.lastMessagePreview ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () async {
+                                await chatbot.loadConversation(c.id);
+                                if (context.mounted) Navigator.pop(context);
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_comment_outlined, color: Colors.white),
+            onPressed: () => chatbot.startNewConversation(),
+          ),
+          IconButton(
             icon: Icon(
               chatbot.isMinimized ? Icons.maximize : Icons.minimize,
               color: Colors.white,
@@ -188,19 +252,22 @@ class _MessageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chatbot = context.watch<ChatbotProvider>();
+    final showTyping =
+        chatbot.isLoading &&
+        (chatbot.messages.isEmpty || chatbot.messages.first.isUser);
 
     return Container(
       color: Colors.grey.shade50,
       child: ListView.builder(
         reverse: true,
         padding: const EdgeInsets.all(16),
-        itemCount: chatbot.messages.length + (chatbot.isLoading ? 1 : 0),
+        itemCount: chatbot.messages.length + (showTyping ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index == 0 && chatbot.isLoading) {
+          if (index == 0 && showTyping) {
             return _TypingIndicator();
           }
 
-          final messageIndex = chatbot.isLoading ? index - 1 : index;
+          final messageIndex = showTyping ? index - 1 : index;
           final message = chatbot.messages[messageIndex];
 
           return _MessageBubble(message: message);
@@ -380,49 +447,65 @@ class _TypingDotState extends State<_TypingDot>
 
 /// Quick Replies
 class _QuickReplies extends StatelessWidget {
+  const _QuickReplies();
+
   @override
   Widget build(BuildContext context) {
-    final chatbot = context.read<ChatbotProvider>();
+    final chatbot = context.watch<ChatbotProvider>();
+    final visible = chatbot.showQuickReplies;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: FutureBuilder<List<String>>(
-        future: chatbot.getQuickReplies(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const SizedBox.shrink();
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      child: IgnorePointer(
+        ignoring: !visible,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 220),
+          opacity: visible ? 1 : 0,
+          child: visible
+              ? Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: FutureBuilder<List<String>>(
+                    future: chatbot.getQuickReplies(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const SizedBox.shrink();
 
-          return Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: snapshot.data!.map((reply) {
-              return InkWell(
-                onTap: () => chatbot.sendMessage(reply),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: snapshot.data!.map((reply) {
+                          return InkWell(
+                            onTap: () => chatbot.sendMessage(reply),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF7B2BB0).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFF7B2BB0).withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Text(
+                                reply,
+                                style: const TextStyle(
+                                  color: Color(0xFF7B2BB0),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF7B2BB0).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFF7B2BB0).withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    reply,
-                    style: const TextStyle(
-                      color: Color(0xFF7B2BB0),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          );
-        },
+                )
+              : const SizedBox.shrink(),
+        ),
       ),
     );
   }
@@ -430,6 +513,8 @@ class _QuickReplies extends StatelessWidget {
 
 /// Input Field
 class _InputField extends StatelessWidget {
+  const _InputField();
+
   @override
   Widget build(BuildContext context) {
     final chatbot = context.read<ChatbotProvider>();
@@ -453,6 +538,7 @@ class _InputField extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: chatbot.messageController,
+                focusNode: chatbot.inputFocusNode,
                 decoration: InputDecoration(
                   hintText: 'Nhập tin nhắn...',
                   hintStyle: TextStyle(color: Colors.grey.shade400),

@@ -1,16 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:n04_app/dummy_firebase.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/gemini_config.dart';
 
 /// AI Chatbot Service - Xử lý logic chatbot và AI responses
 class AIChatbotService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   // Gemini AI Model
   GenerativeModel? _model;
-  ChatSession? _chatSession;
 
   // Initialize Gemini model
   void _initializeGemini() {
@@ -25,13 +23,165 @@ class AIChatbotService {
       ),
       systemInstruction: Content.text(GeminiConfig.systemPrompt),
     );
+  }
 
-    // Create chat session for context
-    _chatSession = _model?.startChat();
+  User? get _currentUser => _supabase.auth.currentUser;
+
+  // ===========================================================================
+  // CONVERSATION + MESSAGE STORAGE (Supabase)
+  // ===========================================================================
+
+  Future<String?> getOrCreateLatestConversation({String? title}) async {
+    final user = _currentUser;
+    if (user == null) return null;
+
+    try {
+      final latest = await _supabase
+          .from('ai_conversations')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_archived', false)
+          .order('updated_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (latest != null && latest['id'] != null) {
+        return latest['id'].toString();
+      }
+
+      final created = await _supabase
+          .from('ai_conversations')
+          .insert({
+            'user_id': user.id,
+            'title': title ?? 'New conversation',
+            'is_archived': false,
+          })
+          .select('id')
+          .single();
+
+      return created['id']?.toString();
+    } catch (e) {
+      debugPrint('Error getOrCreateLatestConversation: $e');
+      return null;
+    }
+  }
+
+  Future<String?> createConversation({String? title}) async {
+    final user = _currentUser;
+    if (user == null) return null;
+
+    try {
+      final created = await _supabase
+          .from('ai_conversations')
+          .insert({
+            'user_id': user.id,
+            'title': title ?? 'New conversation',
+            'is_archived': false,
+          })
+          .select('id')
+          .single();
+
+      return created['id']?.toString();
+    } catch (e) {
+      debugPrint('Error createConversation: $e');
+      return null;
+    }
+  }
+
+  Future<List<AIConversation>> getConversationList() async {
+    final user = _currentUser;
+    if (user == null) return [];
+
+    try {
+      final data = await _supabase
+          .from('ai_conversations')
+          .select()
+          .eq('user_id', user.id)
+          .eq('is_archived', false)
+          .order('updated_at', ascending: false);
+
+      return List<Map<String, dynamic>>.from(data)
+          .map(AIConversation.fromMap)
+          .toList();
+    } catch (e) {
+      debugPrint('Error getConversationList: $e');
+      return [];
+    }
+  }
+
+  Future<List<ChatMessage>> getConversationMessages(
+    String conversationId, {
+    int limit = 100,
+  }) async {
+    if (conversationId.isEmpty) return [];
+
+    try {
+      final data = await _supabase
+          .from('ai_messages')
+          .select()
+          .eq('conversation_id', conversationId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return List<Map<String, dynamic>>.from(data)
+          .map(ChatMessage.fromSupabaseMap)
+          .toList();
+    } catch (e) {
+      debugPrint('Error getConversationMessages: $e');
+      return [];
+    }
+  }
+
+  Future<void> saveMessage({
+    required String conversationId,
+    required String content,
+    required bool isUser,
+    String? modelName,
+    Map<String, dynamic>? metadata,
+  }) async {
+    final user = _currentUser;
+    if (user == null || conversationId.isEmpty || content.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      await _supabase.from('ai_messages').insert({
+        'conversation_id': conversationId,
+        'user_id': user.id,
+        'role': isUser ? 'user' : 'assistant',
+        'content': content,
+        'model_name': modelName,
+        'metadata': metadata,
+      });
+
+      await _supabase.from('ai_conversations').update({
+        'updated_at': DateTime.now().toIso8601String(),
+        'last_message_preview': content.length > 120
+            ? '${content.substring(0, 120)}...'
+            : content,
+      }).eq('id', conversationId);
+    } catch (e) {
+      debugPrint('Error saveMessage: $e');
+    }
+  }
+
+  Future<void> archiveConversation(String conversationId) async {
+    if (conversationId.isEmpty) return;
+    try {
+      await _supabase
+          .from('ai_conversations')
+          .update({'is_archived': true})
+          .eq('id', conversationId);
+    } catch (e) {
+      debugPrint('Error archiveConversation: $e');
+    }
   }
 
   /// Get AI response based on user message
-  Future<ChatMessage> getAIResponse(String userMessage) async {
+  Future<ChatMessage> getAIResponse(
+    String userMessage, {
+    String? conversationId,
+  }) async {
     try {
       // Initialize Gemini if not already done
       if (_model == null && GeminiConfig.isConfigured) {
@@ -39,23 +189,29 @@ class AIChatbotService {
       }
 
       // Get user context for personalization
-      final user = _auth.currentUser;
-      final isAdmin = await _checkIfAdmin(user?.uid);
-      final userName = user?.displayName ?? 'bạn';
+      final user = _currentUser;
+      final isAdmin = await _checkIfAdmin(user?.id);
+      final userName =
+          user?.userMetadata?['full_name']?.toString() ?? user?.email ?? 'bạn';
+
+      final history = conversationId == null
+          ? <ChatMessage>[]
+          : await getConversationMessages(conversationId, limit: 12);
 
       // Build context message
       final contextMessage = _buildContextMessage(
         userMessage,
         userName,
         isAdmin,
+        history.reversed.toList(),
       );
 
       // Try Gemini AI first
-      if (_chatSession != null) {
+      if (_model != null) {
         try {
-          final response = await _chatSession!.sendMessage(
+          final response = await _model!.generateContent([
             Content.text(contextMessage),
-          );
+          ]);
 
           final aiText = response.text?.trim();
           if (aiText != null && aiText.isNotEmpty) {
@@ -89,7 +245,10 @@ class AIChatbotService {
   }
 
   /// Get AI response with streaming (real-time typing effect)
-  Stream<String> getAIResponseStream(String userMessage) async* {
+  Stream<String> getAIResponseStream(
+    String userMessage, {
+    String? conversationId,
+  }) async* {
     try {
       // Initialize Gemini if not already done
       if (_model == null && GeminiConfig.isConfigured) {
@@ -97,29 +256,41 @@ class AIChatbotService {
       }
 
       // Get user context
-      final user = _auth.currentUser;
-      final isAdmin = await _checkIfAdmin(user?.uid);
-      final userName = user?.displayName ?? 'bạn';
+      final user = _currentUser;
+      final isAdmin = await _checkIfAdmin(user?.id);
+      final userName =
+          user?.userMetadata?['full_name']?.toString() ?? user?.email ?? 'bạn';
+
+      final history = conversationId == null
+          ? <ChatMessage>[]
+          : await getConversationMessages(conversationId, limit: 12);
+
       final contextMessage = _buildContextMessage(
         userMessage,
         userName,
         isAdmin,
+        history.reversed.toList(),
       );
 
       // Try Gemini streaming
-      if (_chatSession != null) {
+      if (_model != null) {
         try {
-          final responseStream = _chatSession!.sendMessageStream(
+          final responseStream = _model!.generateContentStream([
             Content.text(contextMessage),
-          );
+          ]);
 
+          bool yielded = false;
           await for (final chunk in responseStream) {
             final text = chunk.text;
-            if (text != null) {
+            if (text != null && text.isNotEmpty) {
+              yielded = true;
               yield text;
             }
           }
-          return;
+
+          if (yielded) {
+            return;
+          }
         } catch (geminiError) {
           debugPrint('Gemini streaming error: $geminiError');
           // Fall back to rule-based
@@ -135,22 +306,33 @@ class AIChatbotService {
     }
   }
 
-  /// Reset chat session (clear context)
+  /// Reset ephemeral model state (DB conversation history stays intact)
   void resetChatSession() {
-    if (_model != null) {
-      _chatSession = _model!.startChat();
-    }
+    // Kept for compatibility with provider API.
+    // No in-memory chat session is used now; context comes from DB messages.
   }
 
-  /// Build context message with user info
+  /// Build context message with user info and short chat history
   String _buildContextMessage(
     String userMessage,
     String userName,
     bool isAdmin,
+    List<ChatMessage> history,
   ) {
     final role = isAdmin ? 'Admin' : 'Người dùng';
+    final historyText = history
+        .where((m) => m.message.trim().isNotEmpty)
+        .take(12)
+        .map(
+          (m) => '${m.isUser ? 'User' : 'Assistant'}: ${m.message.replaceAll('\n', ' ')}',
+        )
+        .join('\n');
+
     return '''
 [User: $userName | Role: $role]
+[Conversation history]\n$historyText
+
+[Current user message]
 $userMessage
 ''';
   }
@@ -159,8 +341,12 @@ $userMessage
   Future<bool> _checkIfAdmin(String? uid) async {
     if (uid == null) return false;
     try {
-      final doc = await _firestore.collection('users').doc(uid).get();
-      return doc.data()['role'] == 'admin';
+      final data = await _supabase
+          .from('users')
+          .select('role')
+          .eq('id', uid)
+          .maybeSingle();
+      return data?['role'] == 'admin';
     } catch (e) {
       return false;
     }
@@ -280,40 +466,84 @@ $userMessage
     ];
   }
 
-  /// Save chat history to Firestore (optional)
-  Future<void> saveChatHistory(List<ChatMessage> messages) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return;
+  /// Save whole message list into a conversation (for compatibility)
+  Future<void> saveChatHistory(
+    List<ChatMessage> messages, {
+    String? conversationId,
+  }) async {
+    final cid = conversationId ?? await getOrCreateLatestConversation();
+    if (cid == null) return;
 
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('chat_history')
-          .add({
-            'messages': messages.map((m) => m.toMap()).toList(),
-            'timestamp': FieldValue.serverDateTime(),
-          });
-    } catch (e) {
-      debugPrint('Error saving chat history: $e');
+    for (final m in messages.reversed) {
+      await saveMessage(
+        conversationId: cid,
+        content: m.message,
+        isUser: m.isUser,
+        modelName: m.isUser ? null : GeminiConfig.modelName,
+      );
     }
+  }
+}
+
+class AIConversation {
+  final String id;
+  final String userId;
+  final String title;
+  final String? lastMessagePreview;
+  final bool isArchived;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  AIConversation({
+    required this.id,
+    required this.userId,
+    required this.title,
+    this.lastMessagePreview,
+    required this.isArchived,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory AIConversation.fromMap(Map<String, dynamic> map) {
+    return AIConversation(
+      id: map['id']?.toString() ?? '',
+      userId: map['user_id']?.toString() ?? '',
+      title: map['title']?.toString() ?? 'Conversation',
+      lastMessagePreview: map['last_message_preview']?.toString(),
+      isArchived: map['is_archived'] == true,
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'].toString())
+          : DateTime.now(),
+      updatedAt: map['updated_at'] != null
+          ? DateTime.parse(map['updated_at'].toString())
+          : DateTime.now(),
+    );
   }
 }
 
 /// Chat Message Model
 class ChatMessage {
+  final String? id;
+  final String? conversationId;
+  final String role;
   final String message;
   final bool isUser;
   final DateTime timestamp;
 
   ChatMessage({
+    this.id,
+    this.conversationId,
+    String? role,
     required this.message,
     required this.isUser,
     required this.timestamp,
-  });
+  }) : role = role ?? (isUser ? 'user' : 'assistant');
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
+      'conversation_id': conversationId,
+      'role': role,
       'message': message,
       'isUser': isUser,
       'timestamp': timestamp.toIso8601String(),
@@ -325,6 +555,20 @@ class ChatMessage {
       message: map['message'] ?? '',
       isUser: map['isUser'] ?? false,
       timestamp: DateTime.parse(map['timestamp']),
+    );
+  }
+
+  factory ChatMessage.fromSupabaseMap(Map<String, dynamic> map) {
+    final role = map['role']?.toString() ?? 'assistant';
+    return ChatMessage(
+      id: map['id']?.toString(),
+      conversationId: map['conversation_id']?.toString(),
+      role: role,
+      message: map['content']?.toString() ?? '',
+      isUser: role == 'user',
+      timestamp: map['created_at'] != null
+          ? DateTime.parse(map['created_at'].toString())
+          : DateTime.now(),
     );
   }
 }

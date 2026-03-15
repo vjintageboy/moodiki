@@ -1,49 +1,32 @@
 import 'package:flutter/foundation.dart';
-import 'package:n04_app/dummy_firebase.dart';
+import '../services/supabase_service.dart';
 
-/// Auto-migrate existing user to Firestore collection 'users'
-/// Gọi khi user login hoặc mở app
+/// Migrate current authenticated user metadata into `users` table.
+/// Safe to call many times (uses upsert under the hood).
 Future<void> migrateCurrentUser() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final service = SupabaseService.instance;
+  final user = service.currentUser;
 
-  if (currentUser == null) {
-    return; // Not logged in, skip
+  if (user == null) {
+    debugPrint('migrateCurrentUser: no authenticated user');
+    return;
   }
 
+  final metadata = user.userMetadata;
+  final fullName =
+      (metadata?['full_name']?.toString().trim().isNotEmpty ?? false)
+      ? metadata!['full_name'].toString().trim()
+      : user.email?.split('@').first ?? 'User';
+
   try {
-    // Check if user document already exists
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .get();
-
-    if (userDoc.exists) {
-      // User already migrated, just update last login
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .update({'lastLoginAt': FieldValue.serverDateTime()});
-
-      debugPrint('✅ User already exists: ${currentUser.email}');
-      return;
-    }
-
-    // Create user document for the first time
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .set({
-          'email': currentUser.email ?? '',
-          'displayName': currentUser.displayName ?? 'User',
-          'photoUrl': currentUser.photoURL,
-          'role': 'user', // Default role
-          'createdAt': FieldValue.serverDateTime(),
-          'lastLoginAt': FieldValue.serverDateTime(),
-        });
-
-    debugPrint('✅ User migrated to Firestore: ${currentUser.email}');
+    await service.createUserProfile(
+      id: user.id,
+      email: user.email ?? '',
+      fullName: fullName,
+      role: 'user',
+    );
+    debugPrint('migrateCurrentUser: profile upserted');
   } catch (e) {
-    debugPrint('❌ Migration error: $e');
-    // Don't throw - app should continue working even if migration fails
+    debugPrint('migrateCurrentUser error: $e');
   }
 }

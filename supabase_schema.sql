@@ -117,10 +117,10 @@ CREATE TABLE public.post_comments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   post_id uuid,
   user_id uuid,
-  is_anonymous boolean DEFAULT false,
   content text NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  is_anonymous boolean DEFAULT false,
   CONSTRAINT post_comments_pkey PRIMARY KEY (id),
   CONSTRAINT post_comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id),
   CONSTRAINT post_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
@@ -137,7 +137,6 @@ CREATE TABLE public.post_likes (
 CREATE TABLE public.posts (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   author_id uuid,
-  is_anonymous boolean DEFAULT false,
   title character varying NOT NULL,
   content text NOT NULL,
   image_url text,
@@ -146,6 +145,7 @@ CREATE TABLE public.posts (
   category character varying DEFAULT 'community'::character varying,
   comment_count integer DEFAULT 0,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  is_anonymous boolean DEFAULT false,
   CONSTRAINT posts_pkey PRIMARY KEY (id),
   CONSTRAINT posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.users(id)
 );
@@ -167,4 +167,32 @@ CREATE TABLE public.users (
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   CONSTRAINT users_pkey PRIMARY KEY (id),
   CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ai_conversations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title character varying DEFAULT 'New conversation'::character varying,
+  last_message_preview text,
+  is_archived boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT ai_conversations_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_conversations_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.ai_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  conversation_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  role character varying NOT NULL,
+  content text NOT NULL,
+  model_name character varying,
+  metadata jsonb,
+  prompt_tokens integer,
+  completion_tokens integer,
+  total_tokens integer,
+  latency_ms integer,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT ai_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.ai_conversations(id),
+  CONSTRAINT ai_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );

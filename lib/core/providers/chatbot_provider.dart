@@ -1,23 +1,53 @@
 import 'package:flutter/material.dart';
 import '../../services/ai_chatbot_service.dart';
+import '../config/gemini_config.dart';
 
 /// Chatbot Provider - Quản lý state của chatbot toàn app
 class ChatbotProvider extends ChangeNotifier {
   final AIChatbotService _chatbotService = AIChatbotService();
+  final FocusNode _inputFocusNode = FocusNode();
 
   // State
   bool _isOpen = false;
   bool _isLoading = false;
   bool _isMinimized = false;
+  String? _activeConversationId;
+  List<AIConversation> _conversations = [];
   final List<ChatMessage> _messages = [];
   final TextEditingController _messageController = TextEditingController();
+  bool _isInputFocused = false;
+  bool _quickRepliesDismissed = false;
+
+  ChatbotProvider() {
+    _inputFocusNode.addListener(() {
+      final focused = _inputFocusNode.hasFocus;
+      if (focused && !_quickRepliesDismissed) {
+        _quickRepliesDismissed = true;
+      }
+      if (_isInputFocused != focused) {
+        _isInputFocused = focused;
+        notifyListeners();
+      }
+    });
+  }
 
   // Getters
   bool get isOpen => _isOpen;
   bool get isLoading => _isLoading;
   bool get isMinimized => _isMinimized;
+  String? get activeConversationId => _activeConversationId;
+  List<AIConversation> get conversations => _conversations;
   List<ChatMessage> get messages => _messages;
   TextEditingController get messageController => _messageController;
+  FocusNode get inputFocusNode => _inputFocusNode;
+  bool get isInputFocused => _isInputFocused;
+  bool get showQuickReplies => !_quickRepliesDismissed && !_hasUserMessages;
+
+  bool get _hasUserMessages => _messages.any((m) => m.isUser);
+
+  Future<void> ensureInitialized() async {
+    await _initializeConversation();
+  }
 
   /// Toggle chatbot panel
   void toggleChatbot() {
@@ -32,9 +62,7 @@ class ChatbotProvider extends ChangeNotifier {
   /// Open chatbot
   void openChatbot() {
     _isOpen = true;
-    if (_messages.isEmpty) {
-      _addWelcomeMessage();
-    }
+    _initializeConversation();
     notifyListeners();
   }
 
@@ -62,10 +90,82 @@ class ChatbotProvider extends ChangeNotifier {
     _messages.insert(0, welcomeMessage);
   }
 
+  Future<void> _initializeConversation() async {
+    _activeConversationId ??= await _chatbotService.getOrCreateLatestConversation();
+    await refreshConversations();
+
+    if (_activeConversationId == null) {
+      if (_messages.isEmpty) {
+        _addWelcomeMessage();
+        notifyListeners();
+      }
+      return;
+    }
+
+    final loaded = await _chatbotService.getConversationMessages(
+      _activeConversationId!,
+      limit: 100,
+    );
+
+    _messages
+      ..clear()
+      ..addAll(loaded);
+
+    if (_messages.isEmpty) {
+      _addWelcomeMessage();
+    }
+
+    _quickRepliesDismissed = _hasUserMessages;
+
+    notifyListeners();
+  }
+
+  Future<void> refreshConversations() async {
+    _conversations = await _chatbotService.getConversationList();
+    notifyListeners();
+  }
+
+  Future<void> startNewConversation() async {
+    _activeConversationId = await _chatbotService.createConversation(
+      title: 'New conversation',
+    );
+    _messages.clear();
+    _addWelcomeMessage();
+    _quickRepliesDismissed = false;
+    await refreshConversations();
+    notifyListeners();
+  }
+
+  Future<void> loadConversation(String conversationId) async {
+    if (conversationId.isEmpty) return;
+
+    _activeConversationId = conversationId;
+    final loaded = await _chatbotService.getConversationMessages(
+      conversationId,
+      limit: 100,
+    );
+
+    _messages
+      ..clear()
+      ..addAll(loaded);
+
+    if (_messages.isEmpty) {
+      _addWelcomeMessage();
+    }
+
+    _quickRepliesDismissed = _hasUserMessages;
+
+    notifyListeners();
+  }
+
   /// Send message with streaming support
   Future<void> sendMessage(String? message) async {
     final text = message ?? _messageController.text.trim();
     if (text.isEmpty) return;
+
+    _quickRepliesDismissed = true;
+
+    _activeConversationId ??= await _chatbotService.getOrCreateLatestConversation();
 
     // Clear input
     _messageController.clear();
@@ -79,45 +179,76 @@ class ChatbotProvider extends ChangeNotifier {
     _messages.insert(0, userMessage);
     notifyListeners();
 
+    if (_activeConversationId != null) {
+      await _chatbotService.saveMessage(
+        conversationId: _activeConversationId!,
+        content: text,
+        isUser: true,
+      );
+    }
+
     // Show loading
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Create placeholder for AI response
-      final aiMessageIndex = 0;
-      final aiMessage = ChatMessage(
-        message: '',
-        isUser: false,
-        timestamp: DateTime.now(),
-      );
-      _messages.insert(0, aiMessage);
-
       // Stream AI response (real-time typing effect)
-      final responseStream = _chatbotService.getAIResponseStream(text);
+      final responseStream = _chatbotService.getAIResponseStream(
+        text,
+        conversationId: _activeConversationId,
+      );
       String fullResponse = '';
+      bool hasInsertedAiMessage = false;
+      final aiTimestamp = DateTime.now();
 
       await for (final chunk in responseStream) {
         fullResponse += chunk;
 
-        // Update AI message with accumulated text
-        _messages[aiMessageIndex] = ChatMessage(
-          message: fullResponse,
-          isUser: false,
-          timestamp: aiMessage.timestamp,
-        );
+        // Insert/update AI message with accumulated text
+        if (!hasInsertedAiMessage) {
+          _messages.insert(
+            0,
+            ChatMessage(
+              message: fullResponse,
+              isUser: false,
+              timestamp: aiTimestamp,
+            ),
+          );
+          hasInsertedAiMessage = true;
+        } else {
+          _messages[0] = ChatMessage(
+            message: fullResponse,
+            isUser: false,
+            timestamp: aiTimestamp,
+          );
+        }
         notifyListeners();
       }
 
       // If no response received, use fallback
       if (fullResponse.isEmpty) {
-        _messages[aiMessageIndex] = ChatMessage(
+        fullResponse = 'Xin lỗi, tôi không thể trả lời lúc này. Vui lòng thử lại! 🙏';
+        _messages.insert(
+          0,
+          ChatMessage(
           message:
-              'Xin lỗi, tôi không thể trả lời lúc này. Vui lòng thử lại! 🙏',
+              fullResponse,
           isUser: false,
           timestamp: DateTime.now(),
+          ),
         );
       }
+
+      if (_activeConversationId != null) {
+        await _chatbotService.saveMessage(
+          conversationId: _activeConversationId!,
+          content: fullResponse,
+          isUser: false,
+          modelName: GeminiConfig.modelName,
+        );
+      }
+
+      await refreshConversations();
     } catch (e) {
       debugPrint('Error sending message: $e');
       final errorMessage = ChatMessage(
@@ -140,14 +271,13 @@ class ChatbotProvider extends ChangeNotifier {
 
   /// Clear chat history
   void clearChat() {
-    _messages.clear();
-    _chatbotService.resetChatSession(); // Reset Gemini context
-    _addWelcomeMessage();
-    notifyListeners();
+    _chatbotService.resetChatSession();
+    startNewConversation();
   }
 
   @override
   void dispose() {
+    _inputFocusNode.dispose();
     _messageController.dispose();
     super.dispose();
   }

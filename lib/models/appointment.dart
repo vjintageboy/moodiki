@@ -151,10 +151,7 @@ class Appointment {
               expertData?['hourly_rate']?.toString() ??
               '150000.0') ??
           150000.0,
-      callType: CallType.values.firstWhere(
-        (e) => e.name == map['call_type'],
-        orElse: () => CallType.video,
-      ),
+      callType: _parseCallType(map['call_type']?.toString()),
       appointmentDate: map['appointment_date'] != null
           ? DateTime.parse(map['appointment_date'])
           : DateTime.now(),
@@ -218,5 +215,13 @@ class Appointment {
       paymentTransId: paymentTransId ?? this.paymentTransId,
       refundStatus: refundStatus ?? this.refundStatus,
     );
+  }
+
+  static CallType _parseCallType(String? dbValue) {
+    // Backward compatibility with DB enum values:
+    // - chat => voice
+    // - video => video
+    if (dbValue == 'chat' || dbValue == 'voice') return CallType.voice;
+    return CallType.video;
   }
 }

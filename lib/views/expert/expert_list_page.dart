@@ -34,25 +34,27 @@ class _ExpertListPageState extends State<ExpertListPage> {
   }
 
   Future<void> _loadExperts() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
       final experts = await Expert.getAllExperts();
+
+      if (!mounted) return;
       setState(() {
         _experts = experts;
         _filteredExperts = experts;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${context.l10n.errorLoadingExperts}: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${context.l10n.errorLoadingExperts}: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

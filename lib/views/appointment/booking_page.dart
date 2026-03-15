@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/services/localization_service.dart';
 import '../../models/availability.dart';
 import '../../models/expert.dart';
@@ -488,18 +489,10 @@ class _BookingPageState extends State<BookingPage> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading
+        debugPrint('❌ Booking error: $e');
 
         // Show error message
-        String errorMessage;
-        if (e.toString().contains('already have an appointment')) {
-          errorMessage =
-              'You already have an appointment at this time. Please choose another time slot.';
-        } else if (e.toString().contains('not available')) {
-          errorMessage =
-              'This expert is not available at the selected time. Please choose another time slot.';
-        } else {
-          errorMessage = 'Failed to book appointment. Please try again.';
-        }
+        final errorMessage = _mapBookingError(e);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -515,6 +508,46 @@ class _BookingPageState extends State<BookingPage> {
         }
       }
     }
+  }
+
+  String _mapBookingError(Object e) {
+    final message = e.toString().toLowerCase();
+
+    // Conflict messages (both EN + VI)
+    if (message.contains('already have an appointment') ||
+        message.contains('đã có lịch hẹn')) {
+      return 'You already have an appointment at this time. Please choose another time slot.';
+    }
+
+    if (message.contains('not available') ||
+        message.contains('không rảnh') ||
+        message.contains('không khả dụng')) {
+      return 'This expert is not available at the selected time. Please choose another time slot.';
+    }
+
+    // Supabase/Postgres common causes
+    if (e is PostgrestException) {
+      final pgMessage = e.message.toLowerCase();
+
+      if (pgMessage.contains('invalid input value for enum') &&
+          pgMessage.contains('call_type')) {
+        return 'Call type configuration is invalid in database. Please contact admin.';
+      }
+
+      if (pgMessage.contains('foreign key') &&
+          (pgMessage.contains('expert_id') || pgMessage.contains('user_id'))) {
+        return 'Booking data is invalid (expert/user not found). Please reopen this page and try again.';
+      }
+
+      if (pgMessage.contains('row-level security') ||
+          pgMessage.contains('permission')) {
+        return 'You do not have permission to create this appointment. Please sign in again.';
+      }
+
+      return 'Booking failed: ${e.message}';
+    }
+
+    return 'Failed to book appointment. Please try again.';
   }
 
   @override
