@@ -82,6 +82,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       final post = NewsPost(
         postId: widget.postToEdit?.postId ?? '', // Use existing ID if editing
         authorId: user.id, // Keep real ID for moderation
+        isAnonymous: _postAnonymously,
         authorName: authorName,
         authorAvatarUrl: authorAvatarUrl,
         authorRole: authorRole,
@@ -102,7 +103,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         }
       } else {
         // Create mode - create new post
@@ -115,7 +116,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         }
       }
     } catch (e) {

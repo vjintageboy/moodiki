@@ -10,6 +10,7 @@ enum PostCategory {
 class NewsPost {
   final String postId;
   final String authorId;
+  final bool isAnonymous;
   final String authorName;
   final String? authorAvatarUrl;
   final String authorRole; // 'user', 'expert', 'admin'
@@ -28,6 +29,7 @@ class NewsPost {
   NewsPost({
     required this.postId,
     required this.authorId,
+    this.isAnonymous = false,
     required this.authorName,
     this.authorAvatarUrl,
     required this.authorRole,
@@ -67,7 +69,8 @@ class NewsPost {
   // Supabase conversion
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
-      'author_id': authorId,
+      'author_id': authorId.isEmpty ? null : authorId,
+      'is_anonymous': isAnonymous,
       'title': title,
       'content': content,
       'image_url': imageUrl,
@@ -90,10 +93,11 @@ class NewsPost {
 
   factory NewsPost.fromMap(Map<String, dynamic> data) {
     // Check if author data is joined
+    final isAnonymous = data['is_anonymous'] == true || data['author_id'] == null;
     final users = data['users'] as Map<String, dynamic>?;
-    final authorName = users?['full_name'] ?? 'Unknown';
-    final authorAvatarUrl = users?['avatar_url'];
-    final authorRole = users?['role'] ?? 'user';
+    final authorName = isAnonymous ? 'Anonymous' : (users?['full_name'] ?? 'Unknown');
+    final authorAvatarUrl = isAnonymous ? null : users?['avatar_url'];
+    final authorRole = isAnonymous ? 'user' : (users?['role'] ?? 'user');
     
     // Parse likedBy if we join with post_likes
     List<String> likedByList = [];
@@ -105,7 +109,8 @@ class NewsPost {
 
     return NewsPost(
       postId: data['id'] ?? '',
-      authorId: data['author_id'] ?? '',
+      authorId: data['author_id']?.toString() ?? '',
+      isAnonymous: isAnonymous,
       authorName: authorName,
       authorAvatarUrl: authorAvatarUrl,
       authorRole: authorRole,
@@ -130,6 +135,7 @@ class NewsPost {
   NewsPost copyWith({
     String? postId,
     String? authorId,
+    bool? isAnonymous,
     String? authorName,
     String? authorAvatarUrl,
     String? authorRole,
@@ -145,6 +151,7 @@ class NewsPost {
     return NewsPost(
       postId: postId ?? this.postId,
       authorId: authorId ?? this.authorId,
+      isAnonymous: isAnonymous ?? this.isAnonymous,
       authorName: authorName ?? this.authorName,
       authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
       authorRole: authorRole ?? this.authorRole,

@@ -117,6 +117,7 @@ CREATE TABLE public.post_comments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   post_id uuid,
   user_id uuid,
+  is_anonymous boolean DEFAULT false,
   content text NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
@@ -136,6 +137,7 @@ CREATE TABLE public.post_likes (
 CREATE TABLE public.posts (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   author_id uuid,
+  is_anonymous boolean DEFAULT false,
   title character varying NOT NULL,
   content text NOT NULL,
   image_url text,

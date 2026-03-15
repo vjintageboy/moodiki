@@ -19,6 +19,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
   final TextEditingController _commentController = TextEditingController();
   late final String currentUserId;
   bool _commentAnonymously = false; // Anonymous comment toggle
+  bool _hasChanges = false;
+  bool _isLikeUpdating = false;
+  bool? _optimisticIsLiked;
+  int? _optimisticLikeCount;
+  int _pendingCommentDelta = 0;
 
   @override
   void initState() {
@@ -58,6 +63,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Future<void> _submitComment() async {
     if (_commentController.text.trim().isEmpty) return;
 
+    final content = _commentController.text.trim();
+    _commentController.clear();
+    setState(() {
+      _pendingCommentDelta += 1;
+    });
+
     try {
       final user = SupabaseService.instance.currentUser!;
 
@@ -83,16 +94,18 @@ class _PostDetailPageState extends State<PostDetailPage> {
         commentId: '',
         postId: widget.post.postId,
         userId: user.id, // Keep real ID for moderation
+        isAnonymous: _commentAnonymously,
         userName: userName,
         userAvatarUrl: userAvatarUrl,
-        content: _commentController.text.trim(),
+        content: content,
       );
 
       await _newsService.addComment(comment);
 
       if (!mounted) return;
 
-      _commentController.clear();
+      _hasChanges = true;
+      setState(() {});
 
       // Hide keyboard
       if (mounted) {
@@ -100,12 +113,22 @@ class _PostDetailPageState extends State<PostDetailPage> {
       }
     } catch (e) {
       if (mounted) {
+        _commentController.text = content;
+      }
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error posting comment: $e'),
             backgroundColor: Colors.red,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendingCommentDelta =
+              _pendingCommentDelta > 0 ? _pendingCommentDelta - 1 : 0;
+        });
       }
     }
   }
@@ -129,14 +152,23 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: const Text('Post', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF6C63FF),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Column(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, _hasChanges);
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        appBar: AppBar(
+          title: const Text('Post', style: TextStyle(color: Colors.white)),
+          backgroundColor: const Color(0xFF6C63FF),
+          iconTheme: const IconThemeData(color: Colors.white),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context, _hasChanges),
+          ),
+        ),
+        body: Column(
         children: [
           // Post content
           Expanded(
@@ -323,14 +355,61 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               }),
                               builder: (context, snapshot) {
                                 final post = snapshot.data ?? widget.post;
-                                final isLiked = post.isLikedBy(currentUserId);
+                                _syncLikeOverrideIfServerCaughtUp(post);
+                                final isLiked = _optimisticIsLiked ??
+                                    post.isLikedBy(currentUserId);
+                                final likeCount =
+                                    _optimisticLikeCount ?? post.likeCount;
 
                                 return InkWell(
                                   onTap: () async {
-                                    await _newsService.toggleLike(
-                                      widget.post.postId,
-                                      currentUserId,
-                                    );
+                                    if (_isLikeUpdating) return;
+
+                                    final previousLiked =
+                                        _optimisticIsLiked ??
+                                        post.isLikedBy(currentUserId);
+                                    final previousCount =
+                                        _optimisticLikeCount ?? post.likeCount;
+                                    final nextLiked = !previousLiked;
+                                    final nextCount = nextLiked
+                                        ? previousCount + 1
+                                        : previousCount - 1;
+
+                                    setState(() {
+                                      _isLikeUpdating = true;
+                                      _optimisticIsLiked = nextLiked;
+                                      _optimisticLikeCount =
+                                          nextCount < 0 ? 0 : nextCount;
+                                    });
+
+                                    try {
+                                      await _newsService.toggleLike(
+                                        widget.post.postId,
+                                        currentUserId,
+                                      );
+                                      if (mounted) {
+                                        _hasChanges = true;
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        setState(() {
+                                          _optimisticIsLiked = previousLiked;
+                                          _optimisticLikeCount = previousCount;
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Like failed: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() {
+                                          _isLikeUpdating = false;
+                                        });
+                                      }
+                                    }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
@@ -357,7 +436,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          '${post.likeCount}',
+                                          '$likeCount',
                                           style: TextStyle(
                                             color: Colors.grey.shade700,
                                             fontWeight: FontWeight.w600,
@@ -395,10 +474,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                     ),
                                     builder: (context, snapshot) {
                                       final count =
-                                          snapshot.data?.length ??
-                                          widget.post.commentCount;
+                                          (snapshot.data?.length ??
+                                              widget.post.commentCount) +
+                                          _pendingCommentDelta;
                                       return Text(
-                                        '$count',
+                                        '${count < 0 ? 0 : count}',
                                         style: TextStyle(
                                           color: Colors.grey.shade700,
                                           fontWeight: FontWeight.w600,
@@ -639,6 +719,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -743,6 +824,23 @@ class _PostDetailPageState extends State<PostDetailPage> {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  void _syncLikeOverrideIfServerCaughtUp(NewsPost serverPost) {
+    if (_optimisticIsLiked == null && _optimisticLikeCount == null) return;
+
+    final serverLiked = serverPost.isLikedBy(currentUserId);
+    final serverCount = serverPost.likeCount;
+
+    if (_optimisticIsLiked == serverLiked && _optimisticLikeCount == serverCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _optimisticIsLiked = null;
+          _optimisticLikeCount = null;
+        });
+      });
     }
   }
 }

@@ -26,6 +26,9 @@ class NewsFeedPage extends StatefulWidget {
 class _NewsFeedPageState extends State<NewsFeedPage> {
   final NewsService _newsService = NewsService();
   late final String currentUserId;
+  Map<String, bool>? _optimisticLikeState;
+  Map<String, int>? _optimisticLikeCount;
+  Set<String>? _likeUpdatingPosts;
 
   PostCategory? _selectedCategory;
   SortBy _sortBy = SortBy.latest;
@@ -69,11 +72,15 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
           // Create post button
           IconButton(
             icon: const Icon(Icons.add_circle_outline, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final changed = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(builder: (context) => const CreatePostPage()),
               );
+
+              if (changed == true && mounted) {
+                setState(() {});
+              }
             },
           ),
         ],
@@ -648,16 +655,45 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
   }
 
   Widget _buildPostCard(NewsPost post) {
-    final isLiked = post.isLikedBy(currentUserId);
+    if (post.postId.isEmpty) {
+      final isLikedFallback = post.isLikedBy(currentUserId);
+      return GestureDetector(
+        onTap: () async {
+          final changed = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
+          );
+
+          if (changed == true && mounted) {
+            setState(() {});
+          }
+        },
+        child: _buildPostCardContent(post, isLikedFallback, post.likeCount),
+      );
+    }
+
+    _syncLikeOverridesIfServerCaughtUp(post);
+    final isLiked = _likeState[post.postId] ??
+        post.isLikedBy(currentUserId);
+    final likeCount = _likeCountState[post.postId] ?? post.likeCount;
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final changed = await Navigator.push<bool>(
           context,
           MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
         );
+
+        if (changed == true && mounted) {
+          setState(() {});
+        }
       },
-      child: Container(
+      child: _buildPostCardContent(post, isLiked, likeCount),
+    );
+  }
+
+  Widget _buildPostCardContent(NewsPost post, bool isLiked, int likeCount) {
+    return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -889,7 +925,45 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
                   // Like button
                   InkWell(
                     onTap: () async {
-                      await _newsService.toggleLike(post.postId, currentUserId);
+                      if (_likeUpdating.contains(post.postId)) return;
+
+                      final previousLiked =
+                          _likeState[post.postId] ??
+                          post.isLikedBy(currentUserId);
+                      final previousCount =
+                          _likeCountState[post.postId] ?? post.likeCount;
+                      final nextLiked = !previousLiked;
+                      final nextCount =
+                          nextLiked ? previousCount + 1 : (previousCount - 1);
+
+                      setState(() {
+                        _likeUpdating.add(post.postId);
+                        _likeState[post.postId] = nextLiked;
+                        _likeCountState[post.postId] =
+                            nextCount < 0 ? 0 : nextCount;
+                      });
+
+                      try {
+                        await _newsService.toggleLike(post.postId, currentUserId);
+                      } catch (e) {
+                        if (!mounted) return;
+                        setState(() {
+                          _likeState[post.postId] = previousLiked;
+                          _likeCountState[post.postId] = previousCount;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Like failed: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            _likeUpdating.remove(post.postId);
+                          });
+                        }
+                      }
                     },
                     child: Row(
                       children: [
@@ -900,7 +974,7 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '${post.likeCount}',
+                          '$likeCount',
                           style: TextStyle(
                             color: Colors.grey.shade700,
                             fontWeight: FontWeight.w600,
@@ -910,32 +984,23 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
                     ),
                   ),
                   const SizedBox(width: 24),
-                  // Comment button with real-time count
-                  StreamBuilder<List<dynamic>>(
-                    stream: _newsService.streamComments(post.postId),
-                    builder: (context, commentSnapshot) {
-                      final commentCount = commentSnapshot.hasData
-                          ? commentSnapshot.data!.length
-                          : post.commentCount;
-
-                      return Row(
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            color: Colors.grey.shade600,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '$commentCount',
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                  // Comment count
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        color: Colors.grey.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${post.commentCount}',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                   const Spacer(),
                   // Share button
@@ -949,8 +1014,7 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Color _getCategoryColor(PostCategory category) {
@@ -986,6 +1050,32 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
     }
   }
 
+  void _syncLikeOverridesIfServerCaughtUp(NewsPost post) {
+    if (post.postId.isEmpty) return;
+
+    final optimisticLiked = _likeState[post.postId];
+    final optimisticCount = _likeCountState[post.postId];
+
+    if (optimisticLiked == null && optimisticCount == null) return;
+
+    final serverLiked = post.isLikedBy(currentUserId);
+    final serverCount = post.likeCount;
+
+    if (optimisticLiked == serverLiked && optimisticCount == serverCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _likeState.remove(post.postId);
+          _likeCountState.remove(post.postId);
+        });
+      });
+    }
+  }
+
+  Map<String, bool> get _likeState => _optimisticLikeState ??= <String, bool>{};
+  Map<String, int> get _likeCountState => _optimisticLikeCount ??= <String, int>{};
+  Set<String> get _likeUpdating => _likeUpdatingPosts ??= <String>{};
+
   /// Handle post menu actions (Edit/Delete)
   void _handlePostAction(String action, NewsPost post) {
     switch (action) {
@@ -999,12 +1089,16 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
   }
 
   /// Edit post
-  void _editPost(NewsPost post) {
+  Future<void> _editPost(NewsPost post) async {
     // Navigate to edit page (we'll create this)
-    Navigator.push(
+    final changed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (context) => CreatePostPage(postToEdit: post)),
     );
+
+    if (changed == true && mounted) {
+      setState(() {});
+    }
   }
 
   /// Delete post with confirmation
@@ -1041,6 +1135,7 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
               backgroundColor: Colors.green,
             ),
           );
+          setState(() {});
         }
       } catch (e) {
         if (mounted) {

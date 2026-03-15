@@ -24,7 +24,12 @@ class NewsService {
 
       return query.asyncMap((postList) async {
         // Fetch users and likes for these posts
-        final userIds = postList.map((p) => p['author_id'] as String).toSet().toList();
+        final userIds = postList
+            .map((p) => p['author_id'])
+            .where((id) => id != null)
+            .map((id) => id.toString())
+            .toSet()
+            .toList();
         final postIds = postList.map((p) => p['id'] as String).toList();
 
         final usersData = userIds.isEmpty ? [] : await _supabase
@@ -83,8 +88,26 @@ class NewsService {
   /// Create new post
   Future<String?> createPost(NewsPost post) async {
     try {
-      final response = await _supabase.from('posts').insert(post.toMap()).select().single();
+      final response = await _supabase
+          .from('posts')
+          .insert(post.toMap())
+          .select()
+          .single();
       return response['id'] as String;
+    } on PostgrestException catch (e) {
+      // Backward compatibility: if DB doesn't have is_anonymous yet.
+      if (e.message.toLowerCase().contains('is_anonymous') && post.isAnonymous) {
+        final fallbackMap = post.toMap()..remove('is_anonymous');
+        fallbackMap['author_id'] = null;
+        final response = await _supabase
+            .from('posts')
+            .insert(fallbackMap)
+            .select()
+            .single();
+        return response['id'] as String;
+      }
+      debugPrint('Error creating post: $e');
+      rethrow;
     } catch (e) {
       debugPrint('Error creating post: $e');
       rethrow;
@@ -101,9 +124,27 @@ class NewsService {
             'content': post.content,
             'image_url': post.imageUrl,
             'category': post.category.name,
+            'is_anonymous': post.isAnonymous,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', post.postId);
+    } on PostgrestException catch (e) {
+      // Backward compatibility: if DB doesn't have is_anonymous yet.
+      if (e.message.toLowerCase().contains('is_anonymous')) {
+        await _supabase
+            .from('posts')
+            .update({
+              'title': post.title,
+              'content': post.content,
+              'image_url': post.imageUrl,
+              'category': post.category.name,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', post.postId);
+        return;
+      }
+      debugPrint('Error updating post: $e');
+      rethrow;
     } catch (e) {
       debugPrint('Error updating post: $e');
       rethrow;
@@ -181,11 +222,18 @@ class NewsService {
         .asyncMap((commentList) async {
           if (commentList.isEmpty) return [];
 
-          final userIds = commentList.map((c) => c['user_id'] as String).toSet().toList();
-          final usersData = await _supabase
-              .from('users')
-              .select('id, full_name, avatar_url')
-              .inFilter('id', userIds);
+            final userIds = commentList
+              .map((c) => c['user_id'])
+              .where((id) => id != null)
+              .map((id) => id.toString())
+              .toSet()
+              .toList();
+              final usersData = userIds.isEmpty
+                ? []
+                : await _supabase
+                  .from('users')
+                  .select('id, full_name, avatar_url')
+                  .inFilter('id', userIds);
 
           final usersMap = {
             for (var u in usersData) u['id']: u
@@ -204,7 +252,8 @@ class NewsService {
     try {
       await _supabase.from('post_comments').insert({
         'post_id': comment.postId,
-        'user_id': comment.userId,
+        'user_id': comment.userId.isEmpty ? null : comment.userId,
+        'is_anonymous': comment.isAnonymous,
         'content': comment.content,
       });
 
@@ -212,6 +261,29 @@ class NewsService {
       final post = await _supabase.from('posts').select('comment_count').eq('id', comment.postId).single();
       final currentCount = post['comment_count'] as int? ?? 0;
       await _supabase.from('posts').update({'comment_count': currentCount + 1}).eq('id', comment.postId);
+    } on PostgrestException catch (e) {
+      // Backward compatibility: if DB doesn't have is_anonymous yet.
+      if (e.message.toLowerCase().contains('is_anonymous') && comment.isAnonymous) {
+        await _supabase.from('post_comments').insert({
+          'post_id': comment.postId,
+          'user_id': null,
+          'content': comment.content,
+        });
+
+        final post = await _supabase
+            .from('posts')
+            .select('comment_count')
+            .eq('id', comment.postId)
+            .single();
+        final currentCount = post['comment_count'] as int? ?? 0;
+        await _supabase
+            .from('posts')
+            .update({'comment_count': currentCount + 1})
+            .eq('id', comment.postId);
+        return;
+      }
+      debugPrint('Error adding comment: $e');
+      rethrow;
     } catch (e) {
       debugPrint('Error adding comment: $e');
       rethrow;

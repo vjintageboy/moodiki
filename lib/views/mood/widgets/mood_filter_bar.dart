@@ -94,6 +94,8 @@ class MoodFilterBar extends StatelessWidget {
           ],
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -105,11 +107,14 @@ class MoodFilterBar extends StatelessWidget {
       backgroundColor: Colors.white,
       selectedColor: const Color(0xFF4CAF50),
       checkmarkColor: Colors.white,
+      showCheckmark: false,
       onSelected: (selected) {
         if (selected) {
           onFilterChanged(value);
         }
       },
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+      visualDensity: VisualDensity.compact,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
