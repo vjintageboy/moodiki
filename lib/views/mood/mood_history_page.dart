@@ -160,7 +160,14 @@ class _MoodHistoryPageState extends State<MoodHistoryPage>
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: Navigator.canPop(context),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              )
+            : null,
         title: Text(
           context.l10n.moodHistory,
           style: const TextStyle(

@@ -9,6 +9,7 @@ import '../../services/supabase_service.dart';
 import '../../services/notification_service.dart';
 import '../../scripts/migrate_existing_users.dart';
 import '../mood/mood_log_page.dart';
+import '../mood/mood_history_page.dart';
 import '../meditation/meditation_library_page.dart';
 import '../meditation/meditation_detail_page.dart';
 import '../expert/expert_list_page.dart';
@@ -245,7 +246,7 @@ class _NewHomePageState extends State<NewHomePage>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const MoodLogPage(),
+                            builder: (_) => const MoodHistoryPage(),
                           ),
                         );
                       },
