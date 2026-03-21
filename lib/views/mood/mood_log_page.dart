@@ -4,7 +4,9 @@ import '../../core/services/localization_service.dart';
 import '../../services/supabase_service.dart';
 
 class MoodLogPage extends StatefulWidget {
-  const MoodLogPage({super.key});
+  final int? initialMoodLevel;
+
+  const MoodLogPage({super.key, this.initialMoodLevel});
 
   @override
   State<MoodLogPage> createState() => _MoodLogPageState();
@@ -14,9 +16,15 @@ class _MoodLogPageState extends State<MoodLogPage> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   final TextEditingController _noteController = TextEditingController();
 
-  int _selectedMoodLevel = 3; // Default: Okay
+  late int _selectedMoodLevel;
   final Set<String> _selectedFactors = {};
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMoodLevel = widget.initialMoodLevel ?? 3;
+  }
 
   // Mood levels with emojis - Will be localized in build method
   List<Map<String, dynamic>> get _moodLevels => [

@@ -815,4 +815,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminSetup => 'Admin Setup';
+
+  @override
+  String get howAreYouFeelingShort => 'How are you feeling?';
+
+  @override
+  String get quickActions => 'Quick Actions';
+
+  @override
+  String get expertConsultation => 'Expert Consultation';
+
+  @override
+  String get allMeditations => 'All Meditations';
+
+  @override
+  String get featuredMeditation => 'Featured Meditation';
+
+  @override
+  String get dailyInspiration => 'Daily Inspiration';
+
+  @override
+  String get wellnessQuote =>
+      'Take care of your mind, and your mind will take care of you.';
+
+  @override
+  String get wellnessQuoteAttribution => 'Mental Wellness App';
+
+  @override
+  String get moodLoggedSuccessful => 'Mood logged successfully!';
+
+  @override
+  String get failedToLogMood => 'Failed to log mood. Please try again.';
+
+  @override
+  String get unableToLoadData => 'Unable to load data. Please try again.';
+
+  @override
+  String get yourWellnessStreak => 'Your Wellness Streak';
+
+  @override
+  String get currentDays => 'Current';
+
+  @override
+  String get longestDays => 'Longest';
+
+  @override
+  String get totalLogs => 'Total';
+
+  @override
+  String get logsUnit => 'logs';
+
+  @override
+  String get daysUnit => 'days';
+
+  @override
+  String get logMood => 'Log mood';
 }

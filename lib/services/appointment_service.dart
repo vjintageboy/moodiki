@@ -1,14 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/appointment.dart';
-import 'chat_service.dart';
 import 'notification_service.dart';
 import 'supabase_service.dart';
 
 class AppointmentService {
   final SupabaseClient _supabase = SupabaseService.instance.client;
   final NotificationService _notificationService = NotificationService();
-  final ChatService _chatService = ChatService();
 
   // ===========================================================================
   //  CREATE APPOINTMENT
@@ -60,16 +58,8 @@ class AppointmentService {
 
       final appointmentId = response['id'].toString();
 
-      // Tạo phòng chat
-      debugPrint(
-        '💬 Creating Chat Room for User: ${appointment.userId} and Expert: ${appointment.expertId}',
-      );
-      await _chatService.createChatRoom(
-        appointmentId: appointmentId,
-        userId: appointment.userId,
-        expertId: appointment.expertId,
-      );
-      debugPrint('✅ Chat Room Created/Updated');
+      // Chat room is created after payment success in payment flow.
+      // Keeping appointment creation focused on booking data only.
 
       return appointmentId;
     } catch (e) {

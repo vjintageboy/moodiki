@@ -1,4 +1,3 @@
-import 'package:n04_app/dummy_firebase.dart';
 /// Trạng thái phòng chat
 enum ChatRoomStatus { active, archived }
 
@@ -8,8 +7,11 @@ class ChatRoom {
   final List<String> participants;
   final ChatRoomStatus status;
   final DateTime createdAt;
+  final String roomType;
+  final String? directKey;
   final String? lastMessage;
   final DateTime? lastMessageTime;
+  final int unreadCount;
 
   ChatRoom({
     required this.id,
@@ -17,42 +19,40 @@ class ChatRoom {
     required this.participants,
     required this.status,
     required this.createdAt,
+    this.roomType = 'appointment',
+    this.directKey,
     this.lastMessage,
     this.lastMessageTime,
+    this.unreadCount = 0,
   });
 
-  /// Chuyển object thành map để lưu Firestore
+  /// Chuyển object thành map để lưu Supabase
   Map<String, dynamic> toMap() {
     return {
-      'appointmentId': appointmentId,
-      'participants': participants,
+      'appointment_id': appointmentId.isEmpty ? null : appointmentId,
       'status': status.name,
-      'createdAt': (createdAt),
-      'lastMessage': lastMessage,
-      'lastMessageTime': lastMessageTime != null
-          ? (lastMessageTime!)
-          : null,
+      'room_type': roomType,
+      'direct_key': directKey,
+      'created_at': createdAt.toIso8601String(),
+      'last_message': lastMessage,
+      'last_message_time': lastMessageTime?.toIso8601String(),
     };
   }
 
-  /// Tạo object từ Firestore DocumentSnapshot
-  factory ChatRoom.fromSnapshot(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>?;
-
-    if (data == null) {
-      throw StateError(
-        'ChatRoom.fromSnapshot: Document ${doc.id} không chứa dữ liệu.',
-      );
-    }
-
+  factory ChatRoom.fromMap(Map<String, dynamic> data) {
     return ChatRoom(
-      id: doc.id,
-      appointmentId: data['appointmentId']?.toString() ?? '',
+      id: data['id']?.toString() ?? '',
+      appointmentId: data['appointment_id']?.toString() ?? '',
       participants: _parseParticipants(data['participants']),
       status: _parseStatus(data['status']),
-      createdAt: _parseDateTime(data['createdAt']),
-      lastMessage: data['lastMessage']?.toString(),
-      lastMessageTime: _parseNullableDateTime(data['lastMessageTime']),
+      createdAt: _parseDateTime(data['created_at']),
+      roomType: data['room_type']?.toString() ?? 'appointment',
+      directKey: data['direct_key']?.toString(),
+      lastMessage: data['last_message']?.toString(),
+      lastMessageTime: _parseNullableDateTime(data['last_message_time']),
+      unreadCount: data['unread_count'] is int
+          ? data['unread_count'] as int
+          : int.tryParse(data['unread_count']?.toString() ?? '') ?? 0,
     );
   }
 
@@ -78,8 +78,8 @@ class ChatRoom {
   }
 
   static DateTime _parseDateTime(dynamic ts) {
-    if (ts is DateTime) return ts.toDate();
     if (ts is DateTime) return ts;
+    if (ts is String) return DateTime.tryParse(ts) ?? DateTime.now();
     return DateTime.now();
   }
 

@@ -1,6 +1,7 @@
-import 'package:n04_app/dummy_firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/chat_message.dart';
 import '../../models/appointment.dart';
@@ -30,10 +31,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
   final AppointmentService _appointmentService = AppointmentService();
-  final String _currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+  final ImagePicker _imagePicker = ImagePicker();
+  String get _currentUserId => Supabase.instance.client.auth.currentUser?.id ?? '';
 
   Appointment? _appointment;
-  bool _isLoadingAppointment = true;
+  String? _lastMarkedMessageId;
+  bool _isSendingMessage = false;
 
   @override
   void initState() {
@@ -51,20 +54,21 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         if (mounted) {
           setState(() {
             _appointment = appointment;
-            _isLoadingAppointment = false;
           });
         }
       } else {
-        if (mounted) setState(() => _isLoadingAppointment = false);
+        if (mounted) setState(() {});
       }
     } catch (e) {
       debugPrint('Error loading appointment: $e');
-      if (mounted) setState(() => _isLoadingAppointment = false);
+      if (mounted) setState(() {});
     }
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+  Future<void> _sendMessage() async {
+    if (_isSendingMessage) return;
+    final content = _messageController.text.trim();
+    if (content.isEmpty) return;
 
     if (_appointment != null) {
       final isExpert = _currentUserId != _appointment!.userId;
@@ -79,13 +83,69 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       }
     }
 
-    _chatService.sendMessage(
-      roomId: widget.roomId,
-      senderId: _currentUserId,
-      content: _messageController.text.trim(),
-    );
+    setState(() => _isSendingMessage = true);
+    try {
+      await _chatService.sendMessage(
+        roomId: widget.roomId,
+        senderId: _currentUserId,
+        content: content,
+      );
 
-    _messageController.clear();
+      _messageController.clear();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể gửi tin nhắn: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingMessage = false);
+      }
+    }
+  }
+
+  Future<void> _pickAndSendImage() async {
+    if (_isSendingMessage) return;
+    try {
+      final file = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+
+      setState(() => _isSendingMessage = true);
+      final bytes = await file.readAsBytes();
+      await _chatService.sendImageMessage(
+        roomId: widget.roomId,
+        senderId: _currentUserId,
+        bytes: bytes,
+        fileName: file.name,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể gửi ảnh: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingMessage = false);
+      }
+    }
+  }
+
+  void _markReadIfNeeded(List<ChatMessage> messages) {
+    if (messages.isEmpty || _currentUserId.isEmpty) return;
+    final latestMessageId = messages.first.id;
+    if (_lastMarkedMessageId == latestMessageId) return;
+
+    _lastMarkedMessageId = latestMessageId;
+    _chatService.markRoomAsRead(
+      roomId: widget.roomId,
+      userId: _currentUserId,
+    );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -141,6 +201,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   }
 
                   final messages = snapshot.data!;
+
+                  _markReadIfNeeded(messages);
 
                   return ListView.builder(
                     reverse: true,
@@ -409,6 +471,52 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       );
     }
 
+    if (message.type == MessageType.image && message.attachmentUrl != null) {
+      final isMe = message.senderId == _currentUserId;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          mainAxisAlignment: isMe
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          children: [
+            if (!isMe) ...[
+              CircleAvatar(
+                radius: 12,
+                backgroundImage:
+                    widget.targetAvatarUrl != null &&
+                        widget.targetAvatarUrl!.isNotEmpty
+                    ? NetworkImage(widget.targetAvatarUrl!)
+                    : null,
+                backgroundColor: Colors.grey.shade200,
+                child:
+                    (widget.targetAvatarUrl == null ||
+                        widget.targetAvatarUrl!.isEmpty)
+                    ? const Icon(Icons.person, size: 14, color: Colors.grey)
+                    : null,
+              ),
+              const SizedBox(width: 8),
+            ],
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220, maxHeight: 280),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  message.attachmentUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey.shade200,
+                    padding: const EdgeInsets.all(12),
+                    child: const Text('Không thể tải ảnh'),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     // User/Expert Message
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -515,7 +623,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           IconButton(
             icon: const Icon(Icons.attach_file_rounded),
             color: Colors.grey.shade400,
-            onPressed: () {},
+            onPressed: _isSendingMessage ? null : _pickAndSendImage,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -556,12 +664,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         ],
                       ),
                       child: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_upward_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                        onPressed: _sendMessage,
+                        icon: _isSendingMessage
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(
+                                Icons.arrow_upward_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                        onPressed: _isSendingMessage ? null : _sendMessage,
                         padding: EdgeInsets.zero,
                       ),
                     ),
@@ -652,14 +771,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (questionController.text.trim().isNotEmpty) {
-                _chatService.sendMessage(
+                await _chatService.sendMessage(
                   roomId: widget.roomId,
                   senderId: _currentUserId,
                   content:
                       '[Câu hỏi trước buổi hẹn]: ${questionController.text.trim()}',
                 );
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Đã gửi câu hỏi thành công!')),

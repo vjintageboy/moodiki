@@ -822,4 +822,60 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminSetup => 'Thiết lập Admin';
+
+  @override
+  String get howAreYouFeelingShort => 'Bạn cảm thấy thế nào?';
+
+  @override
+  String get quickActions => 'Thao tác nhanh';
+
+  @override
+  String get expertConsultation => 'Tư vấn chuyên gia';
+
+  @override
+  String get allMeditations => 'Tất cả bài thiền';
+
+  @override
+  String get featuredMeditation => 'Thiền nổi bật';
+
+  @override
+  String get dailyInspiration => 'Cảm hứng hàng ngày';
+
+  @override
+  String get wellnessQuote =>
+      'Hãy chăm sóc tâm trí của bạn, và tâm trí sẽ chăm sóc bạn.';
+
+  @override
+  String get wellnessQuoteAttribution => 'Ứng dụng Sức khỏe Tinh thần';
+
+  @override
+  String get moodLoggedSuccessful => 'Đã ghi nhận tâm trạng thành công!';
+
+  @override
+  String get failedToLogMood =>
+      'Không thể ghi nhận tâm trạng. Vui lòng thử lại.';
+
+  @override
+  String get unableToLoadData => 'Không thể tải dữ liệu. Vui lòng thử lại.';
+
+  @override
+  String get yourWellnessStreak => 'Chuỗi Sức khỏe Của Bạn';
+
+  @override
+  String get currentDays => 'Hiện tại';
+
+  @override
+  String get longestDays => 'Dài nhất';
+
+  @override
+  String get totalLogs => 'Tổng cộng';
+
+  @override
+  String get logsUnit => 'lần';
+
+  @override
+  String get daysUnit => 'ngày';
+
+  @override
+  String get logMood => 'Ghi lại';
 }

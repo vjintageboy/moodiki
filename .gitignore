@@ -61,3 +61,4 @@ lib/core/config/*_secrets.dart
 node_modules/
 
 
+.claude/

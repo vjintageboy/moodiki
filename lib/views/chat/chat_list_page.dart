@@ -1,9 +1,10 @@
-import 'package:n04_app/dummy_firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/chat_service.dart';
 import '../../services/appointment_service.dart';
+import '../../services/supabase_service.dart';
 import '../../models/chat_room.dart';
 import '../../models/appointment.dart';
 import 'chat_detail_page.dart';
@@ -18,8 +19,38 @@ class ChatListPage extends StatefulWidget {
 class _ChatListPageState extends State<ChatListPage> {
   final ChatService _chatService = ChatService();
   final AppointmentService _appointmentService = AppointmentService();
-  final FirestoreService _firestoreService = FirestoreService();
-  final String _currentAuthId = FirebaseAuth.instance.currentUser?.uid ?? '';
+  final SupabaseService _supabaseService = SupabaseService.instance;
+  String get _currentAuthId => Supabase.instance.client.auth.currentUser?.id ?? '';
+
+  bool _isSyncingRooms = false;
+  int _lastSyncedRooms = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncRoomsFromAppointments();
+    });
+  }
+
+  Future<void> _syncRoomsFromAppointments() async {
+    if (_isSyncingRooms) return;
+    if (_currentAuthId.isEmpty) return;
+
+    setState(() {
+      _isSyncingRooms = true;
+    });
+
+    final changed = await _chatService.syncAppointmentChatRoomsForUser(
+      _currentAuthId,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _isSyncingRooms = false;
+      _lastSyncedRooms = changed;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +60,19 @@ class _ChatListPageState extends State<ChatListPage> {
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            tooltip: 'Đồng bộ cuộc trò chuyện',
+            onPressed: _isSyncingRooms ? null : _syncRoomsFromAppointments,
+            icon: _isSyncingRooms
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync, color: Colors.black87),
+          ),
+        ],
       ),
       body: StreamBuilder<List<ChatRoom>>(
         stream: _chatService.getUserChats(_currentAuthId),
@@ -59,6 +103,16 @@ class _ChatListPageState extends State<ChatListPage> {
                     'Chưa có tin nhắn nào',
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _isSyncingRooms ? null : _syncRoomsFromAppointments,
+                    icon: const Icon(Icons.sync),
+                    label: Text(
+                      _isSyncingRooms
+                          ? 'Đang đồng bộ...'
+                          : 'Đồng bộ từ lịch hẹn',
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   // DEBUG INFO
                   Container(
@@ -71,8 +125,12 @@ class _ChatListPageState extends State<ChatListPage> {
                           style: const TextStyle(fontSize: 11),
                         ),
                         const Text(
-                          'Querying: participants array-contains Auth ID',
+                          'Querying: Supabase chat_participants by current user',
                           style: TextStyle(fontSize: 11),
+                        ),
+                        Text(
+                          'Last Sync Changed Rooms: $_lastSyncedRooms',
+                          style: const TextStyle(fontSize: 11),
                         ),
                         Text(
                           'Chats Found: ${chatRooms.length}',
@@ -259,17 +317,35 @@ class _ChatListPageState extends State<ChatListPage> {
           ],
         ],
       ),
-      trailing: chatRoom.lastMessageTime != null
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  DateFormat('HH:mm').format(chatRoom.lastMessageTime!),
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (chatRoom.lastMessageTime != null)
+            Text(
+              DateFormat('HH:mm').format(chatRoom.lastMessageTime!),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          if (chatRoom.unreadCount > 0) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${chatRoom.unreadCount}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
-            )
-          : null,
+              ),
+            ),
+          ],
+        ],
+      ),
       onTap: () {
         // If I am expert, target is User (appointment.userId)
         // If I am user, target is Expert (appointment.expertId)
@@ -295,20 +371,12 @@ class _ChatListPageState extends State<ChatListPage> {
     String avatarUrl = '';
 
     try {
-      // 1. Try UserProfile
-      final profile = await _firestoreService.getUserProfile(userId);
-      if (profile != null && profile.fullName.isNotEmpty) {
-        displayName = profile.fullName;
-        avatarUrl = profile.avatarUrl ?? '';
-      } else {
-        // 2. Fallback to AppUser
-        final appUser = await _firestoreService.getUser(userId);
-        if (appUser != null) {
-          displayName = appUser.displayName.isNotEmpty
-              ? appUser.displayName
-              : 'Người dùng';
-          avatarUrl = appUser.photoUrl ?? '';
-        }
+      final profile = await _supabaseService.getUserProfile(userId);
+      if (profile != null) {
+        displayName = profile['full_name']?.toString().trim().isNotEmpty == true
+            ? profile['full_name'].toString()
+            : displayName;
+        avatarUrl = profile['avatar_url']?.toString() ?? '';
       }
     } catch (e) {
       debugPrint('Error fetching user info: $e');

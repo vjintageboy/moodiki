@@ -1681,6 +1681,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Admin Setup'**
   String get adminSetup;
+
+  /// No description provided for @howAreYouFeelingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you feeling?'**
+  String get howAreYouFeelingShort;
+
+  /// No description provided for @quickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get quickActions;
+
+  /// No description provided for @expertConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert Consultation'**
+  String get expertConsultation;
+
+  /// No description provided for @allMeditations.
+  ///
+  /// In en, this message translates to:
+  /// **'All Meditations'**
+  String get allMeditations;
+
+  /// No description provided for @featuredMeditation.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured Meditation'**
+  String get featuredMeditation;
+
+  /// No description provided for @dailyInspiration.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Inspiration'**
+  String get dailyInspiration;
+
+  /// No description provided for @wellnessQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Take care of your mind, and your mind will take care of you.'**
+  String get wellnessQuote;
+
+  /// No description provided for @wellnessQuoteAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Mental Wellness App'**
+  String get wellnessQuoteAttribution;
+
+  /// No description provided for @moodLoggedSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood logged successfully!'**
+  String get moodLoggedSuccessful;
+
+  /// No description provided for @failedToLogMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to log mood. Please try again.'**
+  String get failedToLogMood;
+
+  /// No description provided for @unableToLoadData.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load data. Please try again.'**
+  String get unableToLoadData;
+
+  /// No description provided for @yourWellnessStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Wellness Streak'**
+  String get yourWellnessStreak;
+
+  /// No description provided for @currentDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get currentDays;
+
+  /// No description provided for @longestDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest'**
+  String get longestDays;
+
+  /// No description provided for @totalLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get totalLogs;
+
+  /// No description provided for @logsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'logs'**
+  String get logsUnit;
+
+  /// No description provided for @daysUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get daysUnit;
+
+  /// No description provided for @logMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Log mood'**
+  String get logMood;
 }
 
 class _AppLocalizationsDelegate
