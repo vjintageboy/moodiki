@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/providers/chatbot_provider.dart';
 import '../../core/services/localization_service.dart';
 import '../../services/ai_chatbot_service.dart';
 
 /// Chatbot Page - Full screen AI chat interface
+/// Redesigned with Organic Sanctuary design system
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
 
@@ -26,77 +28,229 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-        elevation: 0,
-        backgroundColor: const Color(0xFF4CAF50),
-        title: Row(
+      backgroundColor: AppColors.osSurface,
+      body: SafeArea(
+        child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.smart_toy, color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.aiAssistant,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+            // Custom TopAppBar with glassmorphism
+            _buildTopAppBar(),
+            // Messages
+            Expanded(child: _MessageList()),
+            // Quick Replies
+            const _QuickReplies(),
+            // Input Field
+            const _InputField(),
+            // Bottom Navigation Bar
+            _buildBottomNavBar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopAppBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.osSurface.withValues(alpha: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.osOnSurface.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Back button
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: AppColors.osPrimary, size: 24),
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 12),
+          // AI Avatar with status indicator
+          Stack(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.osPrimaryContainer,
+                    width: 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child: Container(
+                    color: AppColors.osSurfaceContainer,
+                    child: const Icon(
+                      Icons.smart_toy,
+                      color: AppColors.osPrimary,
+                      size: 24,
                     ),
                   ),
-                  Text(
-                    context.l10n.alwaysReadyToHelp,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppColors.osPrimary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.osSurface,
+                      width: 2,
+                    ),
                   ),
-                ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          // Title and status
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.aiAssistant,
+                  style: const TextStyle(
+                    color: AppColors.osPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Plus Jakarta Sans',
+                  ),
+                ),
+                Text(
+                  'ONLINE',
+                  style: TextStyle(
+                    color: AppColors.osOnSurfaceVariant,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Action buttons
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert, color: AppColors.osPrimary, size: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            position: PopupMenuPosition.under,
+            onSelected: (value) {
+              switch (value) {
+                case 'new_chat':
+                  context.read<ChatbotProvider>().startNewConversation();
+                  break;
+                case 'history':
+                  _showConversationHistory();
+                  break;
+                case 'clear_chat':
+                  _showClearChatDialog();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              _buildMenuItem(
+                Icons.add_comment_outlined,
+                'New Chat',
+                AppColors.osPrimary,
+                'new_chat',
+              ),
+              _buildMenuItem(
+                Icons.history,
+                'Conversation History',
+                AppColors.osPrimary,
+                'history',
+              ),
+              _buildMenuItem(
+                Icons.delete_outline,
+                context.l10n.clearChatHistory,
+                Colors.red,
+                'clear_chat',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      decoration: BoxDecoration(
+        color: AppColors.osSurfaceBright.withValues(alpha: 0.7),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.osOnSurface.withValues(alpha: 0.06),
+            blurRadius: 32,
+            offset: const Offset(0, -12),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(Icons.chat, 'Chat', true),
+          _buildNavItem(Icons.history, 'History', false, onTap: _showConversationHistory),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildMenuItem(IconData icon, String label, Color color, String value) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, bool isActive, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.osPrimary : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isActive ? AppColors.osOnPrimary : AppColors.osOnSurface.withValues(alpha: 0.7),
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? AppColors.osOnPrimary : AppColors.osOnSurface.withValues(alpha: 0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.white),
-            onPressed: _showConversationHistory,
-          ),
-          IconButton(
-            icon: const Icon(Icons.add_comment_outlined, color: Colors.white),
-            onPressed: () => context.read<ChatbotProvider>().startNewConversation(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.white),
-            onPressed: () {
-              _showClearChatDialog();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Messages
-          Expanded(child: _MessageList()),
-          // Quick Replies
-          const _QuickReplies(),
-          // Input Field
-          const _InputField(),
-        ],
       ),
     );
   }
@@ -105,12 +259,22 @@ class _ChatbotPageState extends State<ChatbotPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.l10n.clearChatHistory),
-        content: Text(context.l10n.clearChatConfirmation),
+        backgroundColor: AppColors.osSurfaceContainerLowest,
+        title: Text(
+          context.l10n.clearChatHistory,
+          style: const TextStyle(color: AppColors.osOnSurface),
+        ),
+        content: Text(
+          context.l10n.clearChatConfirmation,
+          style: const TextStyle(color: AppColors.osOnSurfaceVariant),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
+            child: Text(
+              context.l10n.cancel,
+              style: const TextStyle(color: AppColors.osPrimary),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -131,85 +295,250 @@ class _ChatbotPageState extends State<ChatbotPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Consumer<ChatbotProvider>(
           builder: (context, chatbot, _) {
             final conversations = chatbot.conversations;
 
-            if (conversations.isEmpty) {
-              return const SizedBox(
-                height: 220,
-                child: Center(child: Text('No conversation history yet')),
-              );
-            }
-
-            return SizedBox(
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: ListView.separated(
-                itemCount: conversations.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final c = conversations[index];
-                  final title = c.title.trim().isNotEmpty
-                      ? c.title
-                      : (c.lastMessagePreview?.isNotEmpty == true
-                            ? c.lastMessagePreview!
-                            : 'Conversation');
-
-                  return ListTile(
-                    selected: c.id == chatbot.activeConversationId,
-                    leading: const Icon(Icons.forum_outlined),
-                    title: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      c.lastMessagePreview ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.redAccent,
+            return DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.osSurfaceContainerLowest,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  ),
+                  child: Column(
+                    children: [
+                      // Drag handle
+                      Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.osOutlineVariant.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (dialogContext) => AlertDialog(
-                            title: const Text('Xóa đoạn chat'),
-                            content: const Text(
-                              'Bạn có chắc muốn xóa đoạn chat này khỏi lịch sử?',
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.osPrimaryContainer,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.history,
+                                color: AppColors.osOnPrimaryContainer,
+                                size: 22,
+                              ),
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(dialogContext, false),
-                                child: Text(this.context.l10n.cancel),
+                            const SizedBox(width: 14),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Conversation History',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.osOnSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Browse your past chats',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.osOnSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(dialogContext, true),
-                                child: Text(
-                                  this.context.l10n.delete,
-                                  style: const TextStyle(color: Colors.red),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: AppColors.osOnSurface),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, color: AppColors.osOutlineVariant),
+                      // List
+                      Expanded(
+                        child: conversations.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 64,
+                                      color: AppColors.osOutlineVariant.withValues(alpha: 0.5),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No conversations yet',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.osOnSurfaceVariant,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Start chatting to see your history',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.osOnSurfaceVariant.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                itemCount: conversations.length,
+                                itemBuilder: (context, index) {
+                                  final c = conversations[index];
+                                  final title = c.title.trim().isNotEmpty
+                                      ? c.title
+                                      : (c.lastMessagePreview?.isNotEmpty == true
+                                            ? c.lastMessagePreview!
+                                            : 'Conversation');
 
-                        if (confirm == true) {
-                          await chatbot.deleteConversation(c.id);
-                        }
-                      },
-                    ),
-                    onTap: () async {
-                      await chatbot.loadConversation(c.id);
-                      if (context.mounted) Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    child: InkWell(
+                                      onTap: () async {
+                                        await chatbot.loadConversation(c.id);
+                                        if (context.mounted) Navigator.pop(context);
+                                      },
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: c.id == chatbot.activeConversationId
+                                              ? AppColors.osSurfaceContainerLow
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: AppColors.osOutlineVariant.withValues(alpha: 0.1),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.osPrimaryContainer,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(
+                                                Icons.forum_outlined,
+                                                color: AppColors.osOnPrimaryContainer,
+                                                size: 20,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    title,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 15,
+                                                      color: AppColors.osOnSurface,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    c.lastMessagePreview ?? '',
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: AppColors.osOnSurfaceVariant,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            PopupMenuButton<String>(
+                                              icon: Icon(
+                                                Icons.more_horiz,
+                                                color: AppColors.osOnSurfaceVariant,
+                                                size: 20,
+                                              ),
+                                              onSelected: (value) async {
+                                                if (value == 'delete') {
+                                                  final confirm = await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (dialogContext) => AlertDialog(
+                                                      backgroundColor: AppColors.osSurfaceContainerLowest,
+                                                      title: const Text('Xóa đoạn chat'),
+                                                      content: const Text(
+                                                        'Bạn có chắc muốn xóa đoạn chat này khỏi lịch sử?',
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () => Navigator.pop(dialogContext, false),
+                                                          child: Text(this.context.l10n.cancel),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () => Navigator.pop(dialogContext, true),
+                                                          child: Text(
+                                                            this.context.l10n.delete,
+                                                            style: const TextStyle(color: Colors.red),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+
+                                                  if (confirm == true) {
+                                                    await chatbot.deleteConversation(c.id);
+                                                  }
+                                                }
+                                              },
+                                              itemBuilder: (context) => [
+                                                PopupMenuItem<String>(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                                      const SizedBox(width: 8),
+                                                      Text(this.context.l10n.delete),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             );
           },
         );
@@ -229,11 +558,11 @@ class _MessageList extends StatelessWidget {
 
     return ListView.builder(
       reverse: true,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
       itemCount: chatbot.messages.length + (showTyping ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == 0 && showTyping) {
-          return _TypingIndicator();
+          return const _TypingIndicator();
         }
 
         final messageIndex = showTyping ? index - 1 : index;
@@ -254,64 +583,112 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 32),
       child: Row(
-        mainAxisAlignment: message.isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!message.isUser) ...[
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.osPrimaryContainer, AppColors.osSecondaryContainer],
+                ),
               ),
               child: const Icon(
                 Icons.smart_toy,
-                size: 22,
-                color: Color(0xFF4CAF50),
+                size: 18,
+                color: AppColors.osOnPrimaryContainer,
               ),
             ),
             const SizedBox(width: 12),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: message.isUser ? const Color(0xFF4CAF50) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+            child: Column(
+              crossAxisAlignment:
+                  message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: message.isUser
+                        ? AppColors.osSurfaceContainerLowest
+                        : AppColors.osSurfaceContainerHigh,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(24),
+                      topRight: const Radius.circular(24),
+                      bottomLeft: Radius.circular(message.isUser ? 24 : 0),
+                      bottomRight: Radius.circular(message.isUser ? 0 : 24),
+                    ),
+                    border: message.isUser
+                        ? Border.all(
+                            color: AppColors.osOutlineVariant.withValues(alpha: 0.15),
+                            width: 1,
+                          )
+                        : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.osOnSurface.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Text(
-                message.message,
-                style: TextStyle(
-                  color: message.isUser ? Colors.white : Colors.black87,
-                  fontSize: 15,
-                  height: 1.4,
+                  child: Text(
+                    message.message,
+                    style: TextStyle(
+                      color: message.isUser
+                          ? AppColors.osOnSurface
+                          : AppColors.osOnPrimaryContainer,
+                      fontSize: 14,
+                      height: 1.6,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: message.isUser ? 0 : 44,
+                  ),
+                  child: Text(
+                    'Just now',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.osOnSurfaceVariant,
+                    ),
+                    textAlign: message.isUser ? TextAlign.right : TextAlign.left,
+                  ),
+                ),
+              ],
             ),
           ),
           if (message.isUser) ...[
             const SizedBox(width: 12),
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.osPrimary, AppColors.osPrimaryDim],
+                ),
               ),
-              child: const Icon(
-                Icons.person,
-                size: 22,
-                color: Color(0xFF4CAF50),
+              child: const Center(
+                child: Text(
+                  'JD',
+                  style: TextStyle(
+                    color: AppColors.osOnPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],
@@ -323,35 +700,55 @@ class _MessageBubble extends StatelessWidget {
 
 /// Typing Indicator
 class _TypingIndicator extends StatelessWidget {
+  const _TypingIndicator();
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 32,
+            height: 32,
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
               shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [AppColors.osPrimaryContainer, AppColors.osSecondaryContainer],
+              ),
             ),
             child: const Icon(
               Icons.smart_toy,
-              size: 22,
-              color: Color(0xFF4CAF50),
+              size: 18,
+              color: AppColors.osOnPrimaryContainer,
             ),
           ),
           const SizedBox(width: 12),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: AppColors.osSurfaceContainerHigh,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+                bottomLeft: Radius.zero,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.osOnSurface.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: List.generate(3, (index) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
                   child: _TypingDot(delay: index * 200),
                 );
               }),
@@ -404,7 +801,7 @@ class _TypingDotState extends State<_TypingDot>
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: const Color(0xFF4CAF50).withValues(alpha: _controller.value),
+            color: AppColors.osPrimary.withValues(alpha: 0.3 + (_controller.value * 0.7)),
             shape: BoxShape.circle,
           ),
         );
@@ -432,17 +829,7 @@ class _QuickReplies extends StatelessWidget {
           opacity: visible ? 1 : 0,
           child: visible
               ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   child: FutureBuilder<List<String>>(
                     future: chatbot.getQuickReplies(),
                     builder: (context, snapshot) {
@@ -461,16 +848,13 @@ class _QuickReplies extends StatelessWidget {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                                color: AppColors.osSurfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
-                                ),
                               ),
                               child: Text(
                                 reply,
                                 style: const TextStyle(
-                                  color: Color(0xFF4CAF50),
+                                  color: AppColors.osOnSurface,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -498,51 +882,67 @@ class _InputField extends StatelessWidget {
     final chatbot = context.read<ChatbotProvider>();
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: chatbot.messageController,
-              focusNode: chatbot.inputFocusNode,
-              decoration: InputDecoration(
-                hintText: context.l10n.typeMessage,
-                hintStyle: TextStyle(color: Colors.grey.shade400),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.osSurfaceContainerLowest,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.osOnSurface.withValues(alpha: 0.06),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              onSubmitted: (_) => chatbot.sendMessage(null),
-              textInputAction: TextInputAction.send,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Material(
-            color: const Color(0xFF4CAF50),
-            borderRadius: BorderRadius.circular(24),
-            child: InkWell(
-              onTap: () => chatbot.sendMessage(null),
-              borderRadius: BorderRadius.circular(24),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                child: const Icon(Icons.send, color: Colors.white, size: 24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: chatbot.messageController,
+                      focusNode: chatbot.inputFocusNode,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.typeMessage,
+                        hintStyle: TextStyle(
+                          color: AppColors.osOnSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                      ),
+                      style: const TextStyle(
+                        color: AppColors.osOnSurface,
+                        fontSize: 14,
+                      ),
+                      onSubmitted: (_) => chatbot.sendMessage(null),
+                      textInputAction: TextInputAction.send,
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: Material(
+                      color: AppColors.osPrimary,
+                      borderRadius: BorderRadius.circular(20),
+                      child: InkWell(
+                        onTap: () => chatbot.sendMessage(null),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          child: const Icon(
+                            Icons.send,
+                            color: AppColors.osOnPrimary,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

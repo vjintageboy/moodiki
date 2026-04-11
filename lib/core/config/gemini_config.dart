@@ -1,4 +1,6 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'system_prompt.dart';
 
 /// Gemini AI Configuration
 ///
@@ -15,37 +17,23 @@ class GeminiConfig {
   // Model configuration
   static const String modelName = 'gemini-2.5-flash'; // Free tier model
 
-  // Safety settings
-static const double temperature = 0.5;
-static const int maxOutputTokens = 512;
+  // Generation config
+  static const double temperature = 0.5;
+  static const int maxOutputTokens = 512;
 
-  // System prompt - Personality của AI chatbot
-  static const String systemPrompt = '''
-Bạn là AI Assistant của ứng dụng Moodiki - một ứng dụng về sức khỏe tinh thần và thiền định (meditation).
+  // ─── Safety Settings (STRICT) ───────────────────────────────────
+  // Use `low` threshold = block when medium or high probability of unsafe.
+  // This is the strictest available threshold in google_generative_ai 0.4.x.
+  static final List<SafetySetting> safetySettings = [
+    SafetySetting(HarmCategory.harassment, HarmBlockThreshold.low),
+    SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.low),
+    SafetySetting(HarmCategory.sexuallyExplicit, HarmBlockThreshold.low),
+    SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.low),
+  ];
 
-Vai trò của bạn:
-- Trợ lý thân thiện, ấm áp và đồng cảm
-- Hỗ trợ người dùng về meditation, theo dõi tâm trạng, wellness
-- Đưa ra lời khuyên về sức khỏe tinh thần (không thay thế chuyên gia y tế)
-- Gợi ý các meditations phù hợp với tâm trạng người dùng
-
-Phong cách giao tiếp:
-- Ngắn gọn, dễ hiểu (2-4 câu)
-- Sử dụng emoji phù hợp 😊🧘‍♀️💙
-- Tiếng Việt tự nhiên, thân thiện
-- Tích cực, động viên người dùng
-
-Tính năng app Moodiki:
-- Meditation sessions (thư giãn, ngủ ngon, giảm stress, tập trung)
-- Mood tracking (ghi nhận tâm trạng hàng ngày)
-- Expert appointments (đặt lịch tư vấn chuyên gia)
-- Streak system (thành tích check-in liên tục)
-
-Lưu ý:
-- KHÔNG đưa ra chẩn đoán y khoa
-- Gợi ý người dùng tìm chuyên gia nếu vấn đề nghiêm trọng
-- Luôn tích cực và khuyến khích self-care
-''';
+  // System prompt — delegates to dynamic template
+  static String get systemPrompt =>
+      SystemPromptTemplate.build();
 
   // Check if API key is configured
   static bool get isConfigured =>

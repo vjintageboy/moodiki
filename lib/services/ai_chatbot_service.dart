@@ -5,6 +5,9 @@ import '../ai/tools/tool_definitions.dart';
 import '../ai/tools/tool_dispatcher.dart';
 import '../ai/tools/tool_loop_controller.dart';
 import '../core/config/gemini_config.dart';
+import '../core/config/system_prompt.dart';
+import '../ai/safety_filter.dart';
+import '../ai/disclaimer.dart';
 import '../services/appointment_service.dart';
 import '../services/availability_service.dart';
 
@@ -33,6 +36,7 @@ class AIChatbotService {
         maxOutputTokens: GeminiConfig.maxOutputTokens,
       ),
       systemInstruction: Content.text(GeminiConfig.systemPrompt),
+      safetySettings: GeminiConfig.safetySettings,
     );
   }
 
@@ -248,6 +252,19 @@ class AIChatbotService {
     String? conversationId,
   }) async {
     try {
+      // ── Safety pre-check ──────────────────────────────────────
+      final safetyResult = SafetyFilter.check(userMessage);
+
+      // Critical: bypass AI, return emergency payload
+      if (safetyResult.shouldBypassAI) {
+        return ChatMessage(
+          message: safetyResult.emergencyMessage ??
+              SystemPromptTemplate.buildEmergency(),
+          isUser: false,
+          timestamp: DateTime.now(),
+        );
+      }
+
       // Initialize Gemini if not already done
       if (_model == null && GeminiConfig.isConfigured) {
         _initializeGemini();
@@ -308,8 +325,13 @@ class AIChatbotService {
 
           final aiText = response.text?.trim();
           if (aiText != null && aiText.isNotEmpty) {
+            // Inject disclaimer if needed
+            final finalResponse = DisclaimerInjector.maybeAdd(
+              aiResponse: aiText,
+              userInput: userMessage,
+            );
             return ChatMessage(
-              message: aiText,
+              message: finalResponse,
               isUser: false,
               timestamp: DateTime.now(),
             );
@@ -320,10 +342,14 @@ class AIChatbotService {
         }
       }
 
-      // Fallback: Rule-based response
+      // Fallback: Rule-based response with disclaimer
       final response = _generateResponse(userMessage, isAdmin);
+      final finalResponse = DisclaimerInjector.maybeAdd(
+        aiResponse: response,
+        userInput: userMessage,
+      );
       return ChatMessage(
-        message: response,
+        message: finalResponse,
         isUser: false,
         timestamp: DateTime.now(),
       );
@@ -343,6 +369,16 @@ class AIChatbotService {
     String? conversationId,
   }) async* {
     try {
+      // ── Safety pre-check ──────────────────────────────────────
+      final safetyResult = SafetyFilter.check(userMessage);
+
+      // Critical: bypass AI, return emergency payload
+      if (safetyResult.shouldBypassAI) {
+        yield safetyResult.emergencyMessage ??
+            SystemPromptTemplate.buildEmergency();
+        return;
+      }
+
       // Initialize Gemini if not already done
       if (_model == null && GeminiConfig.isConfigured) {
         _initializeGemini();
@@ -373,15 +409,25 @@ class AIChatbotService {
           ]);
 
           bool yielded = false;
+          String fullResponse = '';
           await for (final chunk in responseStream) {
             final text = chunk.text;
             if (text != null && text.isNotEmpty) {
+              fullResponse += text;
               yielded = true;
               yield text;
             }
           }
 
           if (yielded) {
+            // Inject disclaimer at the end if needed (final chunk)
+            final withDisclaimer = DisclaimerInjector.maybeAdd(
+              aiResponse: fullResponse,
+              userInput: userMessage,
+            );
+            if (withDisclaimer != fullResponse) {
+              yield withDisclaimer.substring(fullResponse.length);
+            }
             return;
           }
         } catch (geminiError) {
@@ -390,9 +436,13 @@ class AIChatbotService {
         }
       }
 
-      // Fallback: Rule-based with simulated streaming
+      // Fallback: Rule-based with simulated streaming + disclaimer
       final response = _generateResponse(userMessage, isAdmin);
-      yield response;
+      final finalResponse = DisclaimerInjector.maybeAdd(
+        aiResponse: response,
+        userInput: userMessage,
+      );
+      yield finalResponse;
     } catch (e) {
       debugPrint('Error in streaming response: $e');
       yield 'Xin lỗi, tôi gặp sự cố. Vui lòng thử lại sau. 🙏';
@@ -423,6 +473,7 @@ class AIChatbotService {
         )
         .join('\n');
 
+    // Use dynamic system prompt template instead of inline string
     return '''
 [User: $userName | Role: $role]
 [Conversation history]\n$historyText

@@ -45,6 +45,58 @@ class AppColors {
   static const Color categorySleep = Color(0xFFD1F2EB);
   static const Color categoryFocus = Color(0xFFFFF3E0);
 
+  // Organic Sanctuary Theme Colors (Green editorial design system)
+  static const Color osSurface = Color(0xFFDDFFE2);
+  static const Color osPrimary = Color(0xFF006B1B);
+  static const Color osPrimaryDim = Color(0xFF005D16);
+  static const Color osPrimaryFixed = Color(0xFF76FB7A);
+  static const Color osPrimaryFixedDim = Color(0xFF68EC6E);
+  static const Color osOnPrimary = Color(0xFFD1FFC8);
+  static const Color osOnPrimaryFixed = Color(0xFF00480F);
+  static const Color osOnPrimaryFixedVariant = Color(0xFF00691A);
+  static const Color osPrimaryContainer = Color(0xFF76FB7A);
+  static const Color osOnPrimaryContainer = Color(0xFF005E17);
+  static const Color osOnSurface = Color(0xFF0B361D);
+  static const Color osOnSurfaceVariant = Color(0xFF3B6447);
+  static const Color osSurfaceContainerLowest = Color(0xFFFFFFFF);
+  static const Color osSurfaceContainerLow = Color(0xFFCAFDD4);
+  static const Color osSurfaceContainer = Color(0xFFBEF5CA);
+  static const Color osSurfaceContainerHigh = Color(0xFFB5F0C2);
+  static const Color osSurfaceContainerHighest = Color(0xFFACECBB);
+  static const Color osSurfaceBright = Color(0xFFDDFFE2);
+  static const Color osSurfaceDim = Color(0xFFA0E4B1);
+  static const Color osInverseSurface = Color(0xFF001206);
+  static const Color osInverseOnSurface = Color(0xFF7BA785);
+  static const Color osInversePrimary = Color(0xFF76FB7A);
+  static const Color osOutline = Color(0xFF568061);
+  static const Color osOutlineVariant = Color(0xFF8BB795);
+  static const Color osSecondary = Color(0xFF006A38);
+  static const Color osSecondaryDim = Color(0xFF005C30);
+  static const Color osSecondaryFixed = Color(0xFF86FAAC);
+  static const Color osSecondaryFixedDim = Color(0xFF77EB9F);
+  static const Color osOnSecondary = Color(0xFFCCFFD6);
+  static const Color osOnSecondaryFixed = Color(0xFF004A26);
+  static const Color osOnSecondaryFixedVariant = Color(0xFF006A38);
+  static const Color osSecondaryContainer = Color(0xFF86FAAC);
+  static const Color osOnSecondaryContainer = Color(0xFF005F32);
+  static const Color osTertiary = Color(0xFF00656F);
+  static const Color osTertiaryDim = Color(0xFF005861);
+  static const Color osTertiaryFixed = Color(0xFF11EAFF);
+  static const Color osTertiaryFixedDim = Color(0xFF00DBEE);
+  static const Color osOnTertiary = Color(0xFFD4F9FF);
+  static const Color osOnTertiaryFixed = Color(0xFF003D43);
+  static const Color osOnTertiaryFixedVariant = Color(0xFF005C64);
+  static const Color osTertiaryContainer = Color(0xFF11EAFF);
+  static const Color osOnTertiaryContainer = Color(0xFF005159);
+  static const Color osError = Color(0xFFB02500);
+  static const Color osErrorDim = Color(0xFFB92902);
+  static const Color osOnError = Color(0xFFFFEFEC);
+  static const Color osOnErrorContainer = Color(0xFF520C00);
+  static const Color osErrorContainer = Color(0xFFF95630);
+  static const Color osBackground = Color(0xFFDDFFE2);
+  static const Color osOnBackground = Color(0xFF0B361D);
+  static const Color osSurfaceTint = Color(0xFF006B1B);
+
   // Helper methods
   static Color getMoodColor(int moodLevel) {
     switch (moodLevel) {

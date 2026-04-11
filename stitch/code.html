@@ -3,6 +3,8 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -13,57 +15,57 @@
         theme: {
           extend: {
             "colors": {
-                    "primary": "#006b1b",
-                    "on-tertiary-fixed-variant": "#005c64",
-                    "secondary-container": "#86faac",
-                    "on-surface": "#0b361d",
                     "tertiary": "#00656f",
-                    "on-error": "#ffefec",
-                    "primary-fixed": "#76fb7a",
-                    "surface": "#ddffe2",
-                    "secondary": "#006a38",
-                    "surface-variant": "#acecbb",
-                    "on-primary-fixed-variant": "#00691a",
-                    "surface-tint": "#006b1b",
-                    "on-background": "#0b361d",
-                    "on-error-container": "#520c00",
-                    "outline": "#568061",
-                    "on-primary": "#d1ffc8",
-                    "tertiary-fixed": "#11eaff",
-                    "on-primary-container": "#005e17",
-                    "on-secondary-fixed": "#004a26",
-                    "surface-container": "#bef5ca",
-                    "primary-container": "#76fb7a",
-                    "outline-variant": "#8bb795",
-                    "surface-container-low": "#cafdd4",
-                    "inverse-surface": "#001206",
-                    "surface-dim": "#a0e4b1",
-                    "on-tertiary-container": "#005159",
                     "on-surface-variant": "#3b6447",
-                    "tertiary-fixed-dim": "#00dbee",
-                    "secondary-fixed-dim": "#77eb9f",
-                    "error-container": "#f95630",
-                    "secondary-fixed": "#86faac",
-                    "background": "#ddffe2",
-                    "on-secondary-fixed-variant": "#006a38",
-                    "surface-container-high": "#b5f0c2",
-                    "surface-bright": "#ddffe2",
-                    "tertiary-container": "#11eaff",
-                    "error": "#b02500",
-                    "secondary-dim": "#005c30",
-                    "on-tertiary-fixed": "#003d43",
-                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#005159",
                     "primary-fixed-dim": "#68ec6e",
-                    "on-tertiary": "#d4f9ff",
+                    "surface-tint": "#006b1b",
+                    "surface-container": "#bef5ca",
                     "inverse-on-surface": "#7ba785",
-                    "on-secondary-container": "#005f32",
+                    "surface": "#ddffe2",
+                    "error": "#b02500",
                     "inverse-primary": "#76fb7a",
-                    "on-secondary": "#ccffd6",
-                    "error-dim": "#b92902",
-                    "tertiary-dim": "#005861",
+                    "surface-variant": "#acecbb",
+                    "on-primary-container": "#005e17",
+                    "primary-fixed": "#76fb7a",
+                    "surface-dim": "#a0e4b1",
+                    "secondary-fixed": "#86faac",
+                    "surface-container-low": "#cafdd4",
+                    "surface-bright": "#ddffe2",
+                    "on-primary": "#d1ffc8",
+                    "on-primary-fixed-variant": "#00691a",
+                    "on-error": "#ffefec",
+                    "on-background": "#0b361d",
+                    "tertiary-fixed": "#11eaff",
+                    "on-secondary-fixed-variant": "#006a38",
+                    "outline": "#568061",
+                    "on-tertiary-fixed-variant": "#005c64",
                     "on-primary-fixed": "#00480f",
                     "surface-container-highest": "#acecbb",
-                    "primary-dim": "#005d16"
+                    "error-container": "#f95630",
+                    "secondary-dim": "#005c30",
+                    "surface-container-high": "#b5f0c2",
+                    "on-secondary-container": "#005f32",
+                    "tertiary-container": "#11eaff",
+                    "on-tertiary-fixed": "#003d43",
+                    "tertiary-dim": "#005861",
+                    "secondary-fixed-dim": "#77eb9f",
+                    "background": "#ddffe2",
+                    "primary-dim": "#005d16",
+                    "primary": "#006b1b",
+                    "on-secondary-fixed": "#004a26",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#520c00",
+                    "outline-variant": "#8bb795",
+                    "on-secondary": "#ccffd6",
+                    "error-dim": "#b92902",
+                    "on-surface": "#0b361d",
+                    "on-tertiary": "#d4f9ff",
+                    "inverse-surface": "#001206",
+                    "secondary-container": "#86faac",
+                    "primary-container": "#76fb7a",
+                    "tertiary-fixed-dim": "#00dbee",
+                    "secondary": "#006a38"
             },
             "borderRadius": {
                     "DEFAULT": "0.25rem",
@@ -81,12 +83,20 @@
       }
     </script>
 <style>
-        body { background-color: #ddffe2; color: #0b361d; font-family: 'Manrope', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .glass-header { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #ddffe2; }
-        ::-webkit-scrollbar-thumb { background: #006b1b; border-radius: 10px; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chat-container {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 107, 27, 0.2) transparent;
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 107, 27, 0.2);
+            border-radius: 10px;
+        }
     </style>
 <style>
     body {
@@ -94,93 +104,117 @@
     }
   </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-surface font-body text-on-background min-h-screen flex flex-col">
 <!-- TopAppBar -->
-<header class="fixed top-0 w-full z-50 bg-[#ddffe2]/80 dark:bg-emerald-950/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 shadow-[0px_12px_32px_rgba(11,54,29,0.06)]">
-<button class="w-10 h-10 flex items-center justify-center rounded-full active:scale-95 transition-transform duration-200 hover:bg-[#006b1b]/10">
-<span class="material-symbols-outlined text-[#006b1b]">arrow_back</span>
+<header class="sticky top-0 z-50 bg-[#ddffe2]/80 backdrop-blur-xl shadow-sm flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="AI Status Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary-container" data-alt="Modern 3D render of a friendly AI robot face with glowing emerald accents on a soft green background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG3L7FhArZ6s8H1imShk-VnJ7pfEjfNOB_CwDyK2PLwa6jjdS_jYgzj4flZ7Zo1cSqA96JHWN71efIr7ZNvmuCWTk0cborEkG9R1GvPLfsKz1bG2fYfLyiNlHyp6HIefm_UC9PzpD30VOQmxc9WPY36AshxSg1xKdq5jbfFWw8M56ipx96a7HpML2YzLw3pq3X5ZJxgWkNPF-uYSFDWLwrjXDI4jHWiZjM1kb9YwYK9OoqCEIph2wcBWqnjqNXqvlAPzsavYTf5VRi"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-white"></span>
+</div>
+<div>
+<h1 class="font-headline font-bold text-lg text-[#006b1b]">AI Assistant</h1>
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold">Online</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-[#006b1b] hover:bg-emerald-100/50 transition-colors active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined">history</span>
 </button>
-<h1 class="font-['Plus_Jakarta_Sans'] font-bold text-lg text-[#006b1b]">Create Post</h1>
-<button class="bg-[#006b1b] text-[#d1ffc8] px-6 py-2 rounded-full font-headline font-bold text-sm active:scale-95 transition-transform duration-200 shadow-sm">
-            Post
-        </button>
+<button class="p-2 text-[#006b1b] hover:bg-emerald-100/50 transition-colors active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
 </header>
-<main class="pt-24 px-6 max-w-2xl mx-auto space-y-8">
-<!-- Category Section -->
-<section class="space-y-4">
-<div class="flex items-center justify-between">
-<h2 class="font-headline font-bold text-on-surface text-lg">Category</h2>
-<span class="text-xs font-label text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-lg">Required</span>
+<!-- Chat Canvas -->
+<main class="flex-1 overflow-y-auto px-6 py-8 chat-container flex flex-col gap-8 pb-48">
+<!-- Date Divider -->
+<div class="flex justify-center">
+<span class="px-4 py-1 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-semibold">Today</span>
 </div>
-<div class="flex flex-wrap gap-2">
-<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-label text-sm font-semibold shadow-sm transition-all">Mental Health</button>
-<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm font-medium hover:bg-surface-container-high transition-colors">Meditation</button>
-<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm font-medium hover:bg-surface-container-high transition-colors">Wellness</button>
-<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm font-medium hover:bg-surface-container-high transition-colors">Tips</button>
-<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm font-medium hover:bg-surface-container-high transition-colors">Community</button>
-<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant font-label text-sm font-medium hover:bg-surface-container-high transition-colors">News</button>
+<!-- AI Message -->
+<div class="flex items-end gap-3 max-w-[85%]">
+<div class="flex-shrink-0 mb-2">
+<img alt="AI Avatar" class="w-8 h-8 rounded-full" data-alt="Macro close-up of a digital iris with circuitry patterns in shades of green" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSTcLBKTBdqW89f-BuzbThlCw9ARZvjHXgM1i0Z4f7uls2ZDQoCG0OOekYTnsZDn6SB_s-UK79zTj1ysyQDaTCNBhzU5yF9HKUNWOsGcPbWzjJ1aT8zQ-fJDemab2Gg2E_eKKut4HHeihtPPzDAFZyWXeGjX8Tg80TqQuBdD1Unje9unBYFOnVNt3UUfAb4z1wFMPbIzFY4z7WAFU83DY5TUrUTMmwMojogKC4ej_o_LerEU04jSkZJsHhacx579SEawRyp1lU3Hnw"/>
 </div>
-</section>
-<!-- Anonymity Toggle Card -->
-<div class="bg-surface-container-low p-6 rounded-xl flex items-center justify-between shadow-[0px_4px_12px_rgba(11,54,29,0.02)]">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-primary text-2xl">visibility_off</span>
+<div class="flex flex-col gap-1">
+<div class="bg-surface-container-high text-on-primary-container p-4 rounded-[24px] rounded-bl-none shadow-sm">
+<p class="text-sm leading-relaxed">Chào bạn! Tôi có thể giúp gì cho bạn trong không gian xanh hôm nay? Tôi đã sẵn sàng hỗ trợ các công việc của bạn.</p>
 </div>
-<div>
-<h3 class="font-headline font-bold text-on-surface">Post Anonymously</h3>
-<p class="text-sm text-on-surface-variant font-body">Your identity will be hidden from the community.</p>
+<span class="text-[10px] text-on-surface-variant ml-1 font-medium">Just now</span>
 </div>
 </div>
-<label class="relative inline-flex items-center cursor-pointer">
-<input class="sr-only peer" type="checkbox" value=""/>
-<div class="w-12 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-</label>
+<!-- User Message -->
+<div class="flex items-end gap-3 max-w-[85%] self-end flex-row-reverse">
+<div class="flex-shrink-0 mb-2">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">JD</div>
 </div>
-<!-- Input Fields -->
-<section class="space-y-6">
-<!-- Title Field -->
-<div class="space-y-2 group">
-<div class="flex justify-between items-center">
-<label class="font-headline font-bold text-sm text-on-surface ml-1">Post Title</label>
-<span class="text-[10px] font-label text-on-surface-variant">0 / 80</span>
+<div class="flex flex-col gap-1 items-end">
+<div class="bg-surface-container-lowest text-on-surface p-4 rounded-[24px] rounded-br-none border border-outline-variant/15 shadow-sm">
+<p class="text-sm leading-relaxed">Hãy giúp tôi lập kế hoạch cho một vườn thảo mộc nhỏ tại ban công chung cư.</p>
 </div>
-<div class="relative">
-<input class="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-4 text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary/20 font-body transition-all" placeholder="Give your post a clear title..." type="text"/>
-<div class="absolute bottom-0 left-0 h-[2px] w-0 bg-primary transition-all duration-300 group-focus-within:w-full"></div>
+<span class="text-[10px] text-on-surface-variant mr-1 font-medium">Just now</span>
 </div>
 </div>
-<!-- Content Field -->
-<div class="space-y-2 group">
-<label class="font-headline font-bold text-sm text-on-surface ml-1">Content</label>
-<div class="relative">
-<textarea class="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-4 text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary/20 font-body transition-all resize-none" placeholder="Share your thoughts, questions, or experiences with the collective..." rows="8"></textarea>
-<div class="absolute bottom-0 left-0 h-[2px] w-0 bg-primary transition-all duration-300 group-focus-within:w-full"></div>
+<!-- AI Message with List/Bento Layout -->
+<div class="flex items-end gap-3 max-w-[90%]">
+<div class="flex-shrink-0 mb-2">
+<img alt="AI Avatar" class="w-8 h-8 rounded-full" data-alt="Digital representation of organic neural networks pulsing with emerald light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdHtnUEuPi0lCZig2yx-O4CcPfD3PNUgxm7HtkOVRzDrWfHcf9nD4Pb_X7JGE9c8VJSVdTxAxkg--iqdGUq0HyTK5cSjulBM32K3TCnQqBYDbp2yhpULC37LuGzrRgF2vzgfP4JfWkodVAODFP4x5bX0JC1A_1ATTp3TXWyHXMYAq2zBUPLjWgfuPbcasUc-s6kkfiD2NCi8WCmIb5dT0KtJVlZYnSF94en5s4ASecWgNhSwfX47baJMYduwFSUa0x6OSe5tzwh9fC"/>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-surface-container-high text-on-primary-container p-4 rounded-[24px] rounded-bl-none shadow-sm">
+<p class="text-sm leading-relaxed mb-4">Tuyệt vời! Đây là các bước khởi đầu lý tưởng cho khu vườn ban công của bạn:</p>
+<!-- Asymmetric Information Cards -->
+<div class="grid grid-cols-2 gap-3">
+<div class="col-span-2 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">wb_sunny</span>
+<span class="text-xs font-bold font-headline">Ánh sáng</span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Hầu hết thảo mộc cần ít nhất 6 tiếng nắng trực tiếp.</p>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">potted_plant</span>
+<span class="text-xs font-bold font-headline">Húng quế</span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Dễ trồng, ưa ẩm.</p>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">eco</span>
+<span class="text-xs font-bold font-headline">Bạc hà</span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Nên trồng chậu riêng.</p>
 </div>
 </div>
-</section>
-<!-- Media Attachment Bar (Editorial Style) -->
-<section class="grid grid-cols-2 gap-4">
-<button class="flex items-center justify-center gap-2 p-4 rounded-xl bg-surface-container-high text-primary font-bold hover:bg-primary-container transition-colors active:scale-95">
-<span class="material-symbols-outlined">image</span>
-<span class="font-headline text-sm">Add Photo</span>
-</button>
-<button class="flex items-center justify-center gap-2 p-4 rounded-xl bg-surface-container-high text-primary font-bold hover:bg-primary-container transition-colors active:scale-95">
-<span class="material-symbols-outlined">link</span>
-<span class="font-headline text-sm">Attach Link</span>
-</button>
-</section>
-<!-- Visual Anchor (Asymmetric Decoration) -->
-<div class="relative pt-8 overflow-hidden rounded-xl h-32 w-full bg-gradient-to-br from-primary-container/30 to-surface-container-lowest">
-<div class="absolute -right-8 -bottom-8 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
-<div class="p-6 relative flex items-center justify-between">
-<div>
-<h4 class="font-headline font-extrabold text-primary">Guidelines</h4>
-<p class="text-xs text-on-surface-variant mt-1 max-w-[200px]">Be respectful, stay relevant, and help our community thrive.</p>
 </div>
-<img alt="Lush green plant" class="w-20 h-20 rounded-full object-cover shadow-lg border-4 border-white transform rotate-6" data-alt="Close up of a vibrant green monstera leaf with soft morning light and tiny dew drops" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTzIlyrVTPzGKLdb7bpW4W0Rswe9KS4NjJ4nUWJ4VkzUAj8U2s901Bb0YmzvHyMuTpifvMmAqeLzMqMV74lIbPjWfzaT0QZYMmh7MBMvFl9fBoP0_AvX0uvCtYbL_C-CN7WAlAH2pEVAzQUfEAyhHvpopJqK99txNRCeMw7-lHy3uJNAdavMB_SzHvZmRV702523vo5sICEUcVQSK_FGTk3-wZPHa-MQjviP2yvPtDJcvS7_fgHCIFxr1XBOTND6zPN8S92zDFDHES"/>
+<span class="text-[10px] text-on-surface-variant ml-1 font-medium">1 minute ago</span>
 </div>
 </div>
 </main>
+<!-- Input Area Container (Fixed above BottomNavBar) -->
+<div class="fixed bottom-[96px] left-0 w-full px-6 pointer-events-none">
+<div class="max-w-3xl mx-auto flex items-center gap-3 bg-surface-container-high/90 backdrop-blur-lg p-2 pl-5 rounded-full shadow-lg border border-white/40 pointer-events-auto">
+<input class="bg-transparent border-none focus:ring-0 flex-1 text-sm text-on-background placeholder-on-surface-variant/60 font-medium" placeholder="Enter message..." type="text"/>
+<button class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary-dim transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
 <!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-6 bg-[#ddffe2]/70 backdrop-blur-2xl shadow-[0px_-12px_32px_rgba(11,54,29,0.06)]">
+<a class="flex flex-col items-center justify-center bg-[#006b1b] text-white rounded-[16px] px-5 py-2 active:scale-90 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
+<span class="font-label font-medium text-[12px] mt-0.5">Chat</span>
+</a>
+<a class="flex flex-col items-center justify-center text-emerald-900/70 hover:bg-emerald-200/40 px-5 py-2 rounded-[16px] active:scale-90 transition-all duration-300" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label font-medium text-[12px] mt-0.5">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-emerald-900/70 hover:bg-emerald-200/40 px-5 py-2 rounded-[16px] active:scale-90 transition-all duration-300" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label font-medium text-[12px] mt-0.5">Settings</span>
+</a>
+</nav>
 </body></html>
