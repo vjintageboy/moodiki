@@ -410,6 +410,132 @@ abstract class AppLocalizations {
   /// **'News'**
   String get catNews;
 
+  /// No description provided for @createPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Post'**
+  String get createPost;
+
+  /// No description provided for @editPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Post'**
+  String get editPost;
+
+  /// No description provided for @postAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get postAction;
+
+  /// No description provided for @updateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateAction;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get required;
+
+  /// No description provided for @postAnonymously.
+  ///
+  /// In en, this message translates to:
+  /// **'Post Anonymously'**
+  String get postAnonymously;
+
+  /// No description provided for @identityHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Your identity will be hidden from the community.'**
+  String get identityHidden;
+
+  /// No description provided for @postTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post Title'**
+  String get postTitle;
+
+  /// No description provided for @titlePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your post a clear title...'**
+  String get titlePlaceholder;
+
+  /// No description provided for @content.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get content;
+
+  /// No description provided for @contentPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your thoughts, questions, or experiences with the collective...'**
+  String get contentPlaceholder;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Photo'**
+  String get addPhoto;
+
+  /// No description provided for @attachLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach Link'**
+  String get attachLink;
+
+  /// No description provided for @guidelines.
+  ///
+  /// In en, this message translates to:
+  /// **'Guidelines'**
+  String get guidelines;
+
+  /// No description provided for @guidelinesText.
+  ///
+  /// In en, this message translates to:
+  /// **'Be respectful, stay relevant, and help our community thrive.'**
+  String get guidelinesText;
+
+  /// No description provided for @enterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a title'**
+  String get enterTitle;
+
+  /// No description provided for @enterContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter content'**
+  String get enterContent;
+
+  /// No description provided for @postUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Post updated successfully'**
+  String get postUpdated;
+
+  /// No description provided for @postCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Post created successfully'**
+  String get postCreated;
+
+  /// No description provided for @errorCreatingPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Error creating post'**
+  String get errorCreatingPost;
+
   /// No description provided for @experts.
   ///
   /// In en, this message translates to:
@@ -1021,12 +1147,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duration'**
   String get duration;
-
-  /// No description provided for @category.
-  ///
-  /// In en, this message translates to:
-  /// **'Category'**
-  String get category;
 
   /// No description provided for @level.
   ///

@@ -173,6 +173,71 @@ class AppLocalizationsVi extends AppLocalizations {
   String get catNews => 'Tin tức';
 
   @override
+  String get createPost => 'Tạo bài viết';
+
+  @override
+  String get editPost => 'Chỉnh sửa bài viết';
+
+  @override
+  String get postAction => 'Đăng';
+
+  @override
+  String get updateAction => 'Cập nhật';
+
+  @override
+  String get category => 'Danh mục';
+
+  @override
+  String get required => 'Bắt buộc';
+
+  @override
+  String get postAnonymously => 'Đăng ẩn danh';
+
+  @override
+  String get identityHidden => 'Danh tính của bạn sẽ được ẩn khỏi cộng đồng.';
+
+  @override
+  String get postTitle => 'Tiêu đề';
+
+  @override
+  String get titlePlaceholder => 'Đặt tiêu đề rõ ràng cho bài viết...';
+
+  @override
+  String get content => 'Nội dung';
+
+  @override
+  String get contentPlaceholder =>
+      'Chia sẻ suy nghĩ, câu hỏi hoặc trải nghiệm của bạn với cộng đồng...';
+
+  @override
+  String get addPhoto => 'Thêm ảnh';
+
+  @override
+  String get attachLink => 'Đính kèm liên kết';
+
+  @override
+  String get guidelines => 'Hướng dẫn';
+
+  @override
+  String get guidelinesText =>
+      'Hãy tôn trọng, giữ đúng chủ đề và giúp cộng đồng phát triển.';
+
+  @override
+  String get enterTitle => 'Vui lòng nhập tiêu đề';
+
+  @override
+  String get enterContent => 'Vui lòng nhập nội dung';
+
+  @override
+  String get postUpdated => 'Đã cập nhật bài viết thành công';
+
+  @override
+  String get postCreated => 'Đã tạo bài viết thành công';
+
+  @override
+  String get errorCreatingPost => 'Lỗi khi tạo bài viết';
+
+  @override
   String get experts => 'Chuyên gia';
 
   @override
@@ -484,9 +549,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get duration => 'Thời lượng';
-
-  @override
-  String get category => 'Danh mục';
 
   @override
   String get level => 'Cấp độ';

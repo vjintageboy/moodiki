@@ -172,6 +172,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catNews => 'News';
 
   @override
+  String get createPost => 'Create Post';
+
+  @override
+  String get editPost => 'Edit Post';
+
+  @override
+  String get postAction => 'Post';
+
+  @override
+  String get updateAction => 'Update';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get required => 'Required';
+
+  @override
+  String get postAnonymously => 'Post Anonymously';
+
+  @override
+  String get identityHidden =>
+      'Your identity will be hidden from the community.';
+
+  @override
+  String get postTitle => 'Post Title';
+
+  @override
+  String get titlePlaceholder => 'Give your post a clear title...';
+
+  @override
+  String get content => 'Content';
+
+  @override
+  String get contentPlaceholder =>
+      'Share your thoughts, questions, or experiences with the collective...';
+
+  @override
+  String get addPhoto => 'Add Photo';
+
+  @override
+  String get attachLink => 'Attach Link';
+
+  @override
+  String get guidelines => 'Guidelines';
+
+  @override
+  String get guidelinesText =>
+      'Be respectful, stay relevant, and help our community thrive.';
+
+  @override
+  String get enterTitle => 'Please enter a title';
+
+  @override
+  String get enterContent => 'Please enter content';
+
+  @override
+  String get postUpdated => 'Post updated successfully';
+
+  @override
+  String get postCreated => 'Post created successfully';
+
+  @override
+  String get errorCreatingPost => 'Error creating post';
+
+  @override
   String get experts => 'Experts';
 
   @override
@@ -478,9 +544,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get duration => 'Duration';
-
-  @override
-  String get category => 'Category';
 
   @override
   String get level => 'Level';
