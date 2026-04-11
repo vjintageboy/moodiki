@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Mood'**
   String get mood;
 
+  /// No description provided for @news.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get news;
+
   /// No description provided for @experts.
   ///
   /// In en, this message translates to:

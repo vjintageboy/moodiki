@@ -25,12 +25,17 @@ class SupabaseService {
     required String fullName,
     String role = 'user',
   }) async {
-    await _supabase.from('users').upsert({
-      'id': id,
-      'email': email,
-      'full_name': fullName,
-      'role': role,
-    });
+    try {
+      await _supabase.from('users').upsert({
+        'id': id,
+        'email': email,
+        'full_name': fullName,
+        'role': role,
+      });
+    } catch (e) {
+      debugPrint('⚠️ createUserProfile failed: $e');
+      rethrow;
+    }
   }
 
   /// Lấy thông tin user từ bảng `users`

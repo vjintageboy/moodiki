@@ -1,0 +1,281 @@
+[
+  {
+    "?column?": "CREATE POLICY \"users_admin_select_all\" ON \"public\".\"users\" FOR SELECT TO authenticated USING (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_admin_insert\" ON \"public\".\"users\" FOR INSERT TO authenticated WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_admin_update_all\" ON \"public\".\"users\" FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_admin_delete\" ON \"public\".\"users\" FOR DELETE TO authenticated USING (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_self_select\" ON \"public\".\"users\" FOR SELECT TO authenticated USING ((id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"appointments_admin_all\" ON \"public\".\"appointments\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_self_update\" ON \"public\".\"users\" FOR UPDATE TO authenticated USING ((id = auth.uid())) WITH CHECK ((id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"experts_admin_all\" ON \"public\".\"experts\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"experts_read_approved\" ON \"public\".\"experts\" FOR SELECT TO authenticated USING ((is_approved = true));"
+  },
+  {
+    "?column?": "CREATE POLICY \"experts_self_select\" ON \"public\".\"experts\" FOR SELECT TO authenticated USING ((id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"experts_self_update\" ON \"public\".\"experts\" FOR UPDATE TO authenticated USING ((id = auth.uid())) WITH CHECK (((id = auth.uid()) AND (is_approved = ( SELECT experts_1.is_approved\n   FROM experts experts_1\n  WHERE (experts_1.id = auth.uid())))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"experts_self_insert\" ON \"public\".\"experts\" FOR INSERT TO authenticated WITH CHECK ((id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_availability_admin_all\" ON \"public\".\"expert_availability\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_availability_read_all\" ON \"public\".\"expert_availability\" FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1\n   FROM experts\n  WHERE ((experts.id = expert_availability.expert_id) AND (experts.is_approved = true)))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_availability_self_all\" ON \"public\".\"expert_availability\" FOR ALL TO authenticated USING ((expert_id = auth.uid())) WITH CHECK ((expert_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"appointments_expert_select\" ON \"public\".\"appointments\" FOR SELECT TO authenticated USING ((expert_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"appointments_expert_update\" ON \"public\".\"appointments\" FOR UPDATE TO authenticated USING ((expert_id = auth.uid())) WITH CHECK ((expert_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"appointments_user_select\" ON \"public\".\"appointments\" FOR SELECT TO authenticated USING ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"appointments_user_insert\" ON \"public\".\"appointments\" FOR INSERT TO authenticated WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"appointments_user_update\" ON \"public\".\"appointments\" FOR UPDATE TO authenticated USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditations_admin_all\" ON \"public\".\"meditations\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditations_authenticated_read\" ON \"public\".\"meditations\" FOR SELECT TO authenticated USING (true);"
+  },
+  {
+    "?column?": "CREATE POLICY \"mood_entries_admin_select\" ON \"public\".\"mood_entries\" FOR SELECT TO authenticated USING (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"mood_entries_user_all\" ON \"public\".\"mood_entries\" FOR ALL TO authenticated USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"posts_admin_all\" ON \"public\".\"posts\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"posts_authenticated_read\" ON \"public\".\"posts\" FOR SELECT TO authenticated USING (true);"
+  },
+  {
+    "?column?": "CREATE POLICY \"posts_user_insert\" ON \"public\".\"posts\" FOR INSERT TO authenticated WITH CHECK ((author_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"posts_user_update\" ON \"public\".\"posts\" FOR UPDATE TO authenticated USING ((author_id = auth.uid())) WITH CHECK ((author_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"posts_user_delete\" ON \"public\".\"posts\" FOR DELETE TO authenticated USING ((author_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_comments_admin_all\" ON \"public\".\"post_comments\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_comments_read_all\" ON \"public\".\"post_comments\" FOR SELECT TO authenticated USING (true);"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_comments_user_insert\" ON \"public\".\"post_comments\" FOR INSERT TO authenticated WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_comments_user_update\" ON \"public\".\"post_comments\" FOR UPDATE TO authenticated USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_comments_user_delete\" ON \"public\".\"post_comments\" FOR DELETE TO authenticated USING ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_likes_admin_all\" ON \"public\".\"post_likes\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_likes_read_all\" ON \"public\".\"post_likes\" FOR SELECT TO authenticated USING (true);"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_likes_user_insert\" ON \"public\".\"post_likes\" FOR INSERT TO authenticated WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"post_likes_user_delete\" ON \"public\".\"post_likes\" FOR DELETE TO authenticated USING ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_admin_all\" ON \"public\".\"chat_rooms\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_participant_select\" ON \"public\".\"chat_rooms\" FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1\n   FROM chat_participants\n  WHERE ((chat_participants.room_id = chat_rooms.id) AND (chat_participants.user_id = auth.uid())))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"ai_conversations_user_all\" ON \"public\".\"ai_conversations\" FOR ALL TO authenticated USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_participant_update\" ON \"public\".\"chat_rooms\" FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1\n   FROM chat_participants\n  WHERE ((chat_participants.room_id = chat_rooms.id) AND (chat_participants.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1\n   FROM chat_participants\n  WHERE ((chat_participants.room_id = chat_rooms.id) AND (chat_participants.user_id = auth.uid())))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_admin_all\" ON \"public\".\"messages\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_participant_select\" ON \"public\".\"messages\" FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1\n   FROM chat_participants\n  WHERE ((chat_participants.room_id = messages.room_id) AND (chat_participants.user_id = auth.uid())))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_sender_insert\" ON \"public\".\"messages\" FOR INSERT TO authenticated WITH CHECK (((sender_id = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM chat_participants\n  WHERE ((chat_participants.room_id = messages.room_id) AND (chat_participants.user_id = auth.uid()))))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_sender_delete\" ON \"public\".\"messages\" FOR DELETE TO authenticated USING ((sender_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_participants_admin_all\" ON \"public\".\"chat_participants\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_participants_read\" ON \"public\".\"chat_participants\" FOR SELECT TO authenticated USING (((user_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM chat_participants cp\n  WHERE ((cp.room_id = chat_participants.room_id) AND (cp.user_id = auth.uid()))))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"ai_conversations_admin_select\" ON \"public\".\"ai_conversations\" FOR SELECT TO authenticated USING (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"ai_messages_admin_select\" ON \"public\".\"ai_messages\" FOR SELECT TO authenticated USING (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"ai_messages_user_all\" ON \"public\".\"ai_messages\" FOR ALL TO authenticated USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"notifications_admin_all\" ON \"public\".\"notifications\" FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());"
+  },
+  {
+    "?column?": "CREATE POLICY \"notifications_user_select\" ON \"public\".\"notifications\" FOR SELECT TO authenticated USING ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"notifications_user_update\" ON \"public\".\"notifications\" FOR UPDATE TO authenticated USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"avatars_public_read\" ON \"storage\".\"objects\" FOR SELECT TO authenticated USING ((bucket_id = 'avatars'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"avatars_user_upload\" ON \"storage\".\"objects\" FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));"
+  },
+  {
+    "?column?": "CREATE POLICY \"avatars_user_update\" ON \"storage\".\"objects\" FOR UPDATE TO authenticated USING (((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));"
+  },
+  {
+    "?column?": "CREATE POLICY \"avatars_user_delete\" ON \"storage\".\"objects\" FOR DELETE TO authenticated USING (((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));"
+  },
+  {
+    "?column?": "CREATE POLICY \"avatars_admin_delete\" ON \"storage\".\"objects\" FOR DELETE TO authenticated USING (((bucket_id = 'avatars'::text) AND is_admin()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditation_audio_public_read\" ON \"storage\".\"objects\" FOR SELECT TO authenticated USING ((bucket_id = 'meditation-audio'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditation_audio_admin_write\" ON \"storage\".\"objects\" FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'meditation-audio'::text) AND is_admin()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditation_audio_admin_delete\" ON \"storage\".\"objects\" FOR DELETE TO authenticated USING (((bucket_id = 'meditation-audio'::text) AND is_admin()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditation_thumbnails_public_read\" ON \"storage\".\"objects\" FOR SELECT TO authenticated USING ((bucket_id = 'meditation-thumbnails'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditation_thumbnails_admin_write\" ON \"storage\".\"objects\" FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'meditation-thumbnails'::text) AND is_admin()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"meditation_thumbnails_admin_delete\" ON \"storage\".\"objects\" FOR DELETE TO authenticated USING (((bucket_id = 'meditation-thumbnails'::text) AND is_admin()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_docs_admin_select\" ON \"storage\".\"objects\" FOR SELECT TO authenticated USING (((bucket_id = 'expert-documents'::text) AND is_admin()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_docs_self_select\" ON \"storage\".\"objects\" FOR SELECT TO authenticated USING (((bucket_id = 'expert-documents'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_docs_self_upload\" ON \"storage\".\"objects\" FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'expert-documents'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_docs_self_update\" ON \"storage\".\"objects\" FOR UPDATE TO authenticated USING (((bucket_id = 'expert-documents'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_docs_self_delete\" ON \"storage\".\"objects\" FOR DELETE TO authenticated USING (((bucket_id = 'expert-documents'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));"
+  },
+  {
+    "?column?": "CREATE POLICY \"expert_docs_admin_delete\" ON \"storage\".\"objects\" FOR DELETE TO authenticated USING (((bucket_id = 'expert-documents'::text) AND is_admin()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_read_appointment_counterpart\" ON \"public\".\"users\" FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1\n   FROM appointments a\n  WHERE (((a.user_id = users.id) AND (a.expert_id = auth.uid())) OR ((a.expert_id = users.id) AND (a.user_id = auth.uid()))))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_read_approved_expert_profile\" ON \"public\".\"users\" FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1\n   FROM experts e\n  WHERE ((e.id = users.id) AND (e.is_approved = true)))));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_select_auth\" ON \"public\".\"chat_rooms\" FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_insert_auth\" ON \"public\".\"chat_rooms\" FOR INSERT TO public WITH CHECK ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_update_auth\" ON \"public\".\"chat_rooms\" FOR UPDATE TO public USING ((auth.role() = 'authenticated'::text)) WITH CHECK ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_delete_auth\" ON \"public\".\"chat_rooms\" FOR DELETE TO public USING ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_select_auth\" ON \"public\".\"messages\" FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_insert_auth\" ON \"public\".\"messages\" FOR INSERT TO public WITH CHECK ((sender_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_select_own\" ON \"public\".\"users\" FOR SELECT TO public USING ((auth.uid() = id));"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_insert_authenticated\" ON \"public\".\"users\" FOR INSERT TO public WITH CHECK ((auth.uid() = id));"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_update_own\" ON \"public\".\"users\" FOR UPDATE TO public USING ((auth.uid() = id)) WITH CHECK ((auth.uid() = id));"
+  },
+  {
+    "?column?": "CREATE POLICY \"users_read_all_authenticated\" ON \"public\".\"users\" FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_participants_select_own\" ON \"public\".\"chat_participants\" FOR SELECT TO public USING ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_participants_insert_own\" ON \"public\".\"chat_participants\" FOR INSERT TO public WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_participants_update_own\" ON \"public\".\"chat_participants\" FOR UPDATE TO public USING ((user_id = auth.uid())) WITH CHECK ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_participants_delete_own\" ON \"public\".\"chat_participants\" FOR DELETE TO public USING ((user_id = auth.uid()));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_select_participant\" ON \"public\".\"chat_rooms\" FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_insert_authenticated\" ON \"public\".\"chat_rooms\" FOR INSERT TO public WITH CHECK ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_update_participant\" ON \"public\".\"chat_rooms\" FOR UPDATE TO public USING ((auth.role() = 'authenticated'::text)) WITH CHECK ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"chat_rooms_delete_participant\" ON \"public\".\"chat_rooms\" FOR DELETE TO public USING ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_select_participant\" ON \"public\".\"messages\" FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));"
+  },
+  {
+    "?column?": "CREATE POLICY \"messages_insert_sender\" ON \"public\".\"messages\" FOR INSERT TO public WITH CHECK (((sender_id = auth.uid()) AND (auth.role() = 'authenticated'::text)));"
+  }
+]

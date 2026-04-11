@@ -56,6 +56,9 @@ CREATE TABLE public.appointments (
 CREATE TABLE public.chat_participants (
   room_id uuid NOT NULL,
   user_id uuid NOT NULL,
+  unread_count integer DEFAULT 0,
+  last_read_at timestamp with time zone,
+  last_read_message_id uuid,
   CONSTRAINT chat_participants_pkey PRIMARY KEY (room_id, user_id),
   CONSTRAINT chat_participants_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.chat_rooms(id),
   CONSTRAINT chat_participants_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
@@ -68,6 +71,9 @@ CREATE TABLE public.chat_rooms (
   appointment_id uuid,
   status character varying DEFAULT 'active'::character varying,
   last_message_time timestamp with time zone,
+  room_type character varying DEFAULT 'appointment'::character varying,
+  direct_key text,
+  created_by uuid,
   CONSTRAINT chat_rooms_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.expert_availability (
@@ -126,6 +132,11 @@ CREATE TABLE public.messages (
   type character varying DEFAULT 'text'::character varying,
   is_pinned boolean DEFAULT false,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  attachment_url text,
+  attachment_name text,
+  attachment_size_bytes integer,
+  delivered_at timestamp with time zone,
+  read_at timestamp with time zone,
   CONSTRAINT messages_pkey PRIMARY KEY (id),
   CONSTRAINT messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.chat_rooms(id),
   CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id)
@@ -159,14 +170,14 @@ CREATE TABLE public.post_comments (
   post_id uuid,
   user_id uuid,
   content text NOT NULL,
-  parent_comment_id uuid,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   is_anonymous boolean DEFAULT false,
+  parent_comment_id uuid,
   CONSTRAINT post_comments_pkey PRIMARY KEY (id),
-  CONSTRAINT post_comments_parent_comment_id_fkey FOREIGN KEY (parent_comment_id) REFERENCES public.post_comments(id) ON DELETE CASCADE,
   CONSTRAINT post_comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id),
-  CONSTRAINT post_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT post_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT post_comments_parent_comment_id_fkey FOREIGN KEY (parent_comment_id) REFERENCES public.post_comments(id)
 );
 CREATE TABLE public.post_likes (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

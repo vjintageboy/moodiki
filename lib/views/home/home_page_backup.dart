@@ -320,7 +320,11 @@ class _HomeTabState extends State<HomeTab> {
 
   // Migrate existing Firebase Auth user to Firestore
   Future<void> _migrateUser() async {
-    await migrateCurrentUser();
+    try {
+      await migrateCurrentUser();
+    } catch (e) {
+      debugPrint('⚠️ _migrateUser failed (non-critical, app continues): $e');
+    }
   }
 
   // Load streak data

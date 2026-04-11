@@ -31,6 +31,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mood => 'Tâm trạng';
 
   @override
+  String get news => 'Tin tức';
+
+  @override
   String get experts => 'Chuyên gia';
 
   @override

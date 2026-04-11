@@ -247,74 +247,89 @@ class ChatService {
       return Stream.value(const <ChatRoom>[]);
     }
 
-    return _supabase
+    final baseStream = _supabase
         .from('chat_rooms')
         .stream(primaryKey: ['id'])
-        .order('updated_at', ascending: false)
-        .asyncMap((rooms) async {
-          if (rooms.isEmpty) return <ChatRoom>[];
-          final roomIds = rooms.map((r) => r['id'].toString()).toList();
+        .order('updated_at', ascending: false);
 
-          final ownParticipantRows = await _supabase
+    return baseStream.asyncMap((rooms) async {
+      try {
+        if (rooms.isEmpty) return <ChatRoom>[];
+        final roomIds = rooms.map((r) => r['id'].toString()).toList();
+
+        List<Map<String, dynamic>> ownParticipantRows;
+        try {
+          ownParticipantRows = await _supabase
               .from('chat_participants')
               .select('room_id, unread_count')
               .eq('user_id', userId)
               .inFilter('room_id', roomIds);
+        } catch (e) {
+          debugPrint('⚠️ chat_participants query failed (RLS): $e');
+          return <ChatRoom>[];
+        }
 
-          if (ownParticipantRows.isEmpty) {
-            return <ChatRoom>[];
-          }
+        if (ownParticipantRows.isEmpty) {
+          return <ChatRoom>[];
+        }
 
-          final ownByRoom = <String, int>{};
-          for (final row in ownParticipantRows) {
+        final ownByRoom = <String, int>{};
+        for (final row in ownParticipantRows) {
+          final map = Map<String, dynamic>.from(row);
+          final roomId = map['room_id']?.toString() ?? '';
+          if (roomId.isEmpty) continue;
+          ownByRoom[roomId] = map['unread_count'] is int
+              ? map['unread_count'] as int
+              : int.tryParse(map['unread_count']?.toString() ?? '') ?? 0;
+        }
+
+        final visibleRoomIds = ownByRoom.keys.toSet();
+        if (visibleRoomIds.isEmpty) {
+          return <ChatRoom>[];
+        }
+
+        final participantsByRoom = <String, List<String>>{};
+        try {
+          final participantRows = await _supabase
+              .from('chat_participants')
+              .select('room_id, user_id')
+              .inFilter('room_id', visibleRoomIds.toList());
+
+          for (final row in participantRows) {
             final map = Map<String, dynamic>.from(row);
             final roomId = map['room_id']?.toString() ?? '';
-            if (roomId.isEmpty) continue;
-            ownByRoom[roomId] = map['unread_count'] is int
-                ? map['unread_count'] as int
-                : int.tryParse(map['unread_count']?.toString() ?? '') ?? 0;
+            final participantId = map['user_id']?.toString() ?? '';
+            if (roomId.isEmpty || participantId.isEmpty) continue;
+            participantsByRoom.putIfAbsent(roomId, () => []).add(participantId);
           }
+        } catch (e) {
+          debugPrint('⚠️ Could not fetch all room participants (RLS likely): $e');
+        }
 
-          final visibleRoomIds = ownByRoom.keys.toSet();
-          if (visibleRoomIds.isEmpty) {
-            return <ChatRoom>[];
-          }
+        final visibleRooms = <ChatRoom>[];
+        for (final room in rooms) {
+          final roomMap = Map<String, dynamic>.from(room);
+          final roomId = roomMap['id'].toString();
+          if (!visibleRoomIds.contains(roomId)) continue;
+          final participants = participantsByRoom[roomId] ?? [userId];
 
-          final participantsByRoom = <String, List<String>>{};
-          try {
-            final participantRows = await _supabase
-                .from('chat_participants')
-                .select('room_id, user_id')
-                .inFilter('room_id', visibleRoomIds.toList());
-
-            for (final row in participantRows) {
-              final map = Map<String, dynamic>.from(row);
-              final roomId = map['room_id']?.toString() ?? '';
-              final participantId = map['user_id']?.toString() ?? '';
-              if (roomId.isEmpty || participantId.isEmpty) continue;
-              participantsByRoom.putIfAbsent(roomId, () => []).add(participantId);
-            }
-          } catch (e) {
-            debugPrint('⚠️ Could not fetch all room participants (RLS likely): $e');
-          }
-
-          final visibleRooms = <ChatRoom>[];
-          for (final room in rooms) {
-            final roomMap = Map<String, dynamic>.from(room);
-            final roomId = roomMap['id'].toString();
-            if (!visibleRoomIds.contains(roomId)) continue;
-            final participants = participantsByRoom[roomId] ?? [userId];
-
-            visibleRooms.add(
-              ChatRoom.fromMap({
-                ...roomMap,
-                'participants': participants,
-                'unread_count': ownByRoom[roomId] ?? 0,
-              }),
-            );
-          }
-          return visibleRooms;
-        });
+          visibleRooms.add(
+            ChatRoom.fromMap({
+              ...roomMap,
+              'participants': participants,
+              'unread_count': ownByRoom[roomId] ?? 0,
+            }),
+          );
+        }
+        return visibleRooms;
+      } catch (e) {
+        debugPrint('❌ getUserChats asyncMap error: $e');
+        return <ChatRoom>[];
+      }
+    }).handleError((error, stackTrace) {
+      debugPrint('❌ getUserChats stream caught error: $error');
+      return <ChatRoom>[];
+    });
   }
 
   // Get chat room by ID

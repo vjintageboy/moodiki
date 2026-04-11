@@ -189,7 +189,7 @@ class _HomePageState extends State<HomePage>
                     2,
                     Icons.article_outlined,
                     Icons.article,
-                    'News',
+                    context.l10n.news,
                   ),
                 ),
                 Expanded(

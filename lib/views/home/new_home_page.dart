@@ -67,7 +67,11 @@ class _NewHomePageState extends State<NewHomePage>
   }
 
   Future<void> _migrateUser() async {
-    await migrateCurrentUser();
+    try {
+      await migrateCurrentUser();
+    } catch (e) {
+      debugPrint('⚠️ _migrateUser failed (non-critical, app continues): $e');
+    }
   }
 
   Future<void> _loadData() async {

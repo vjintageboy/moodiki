@@ -30,6 +30,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mood => 'Mood';
 
   @override
+  String get news => 'News';
+
+  @override
   String get experts => 'Experts';
 
   @override

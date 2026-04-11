@@ -35,7 +35,7 @@ class QuickActionGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.5,
+        childAspectRatio: 1.2,
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) {
@@ -72,7 +72,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(12),
@@ -86,17 +86,20 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                 size: 28,
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              widget.action.title,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
+            const SizedBox(height: 10),
+            Expanded(
+              child: Text(
+                widget.action.title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

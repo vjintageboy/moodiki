@@ -355,7 +355,7 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
 
     switch (_sortBy) {
       case SortBy.latest:
-        // Already sorted by createdAt descending from Firestore
+        // Already sorted by createdAt descending from Supabase
         break;
 
       case SortBy.hot:
