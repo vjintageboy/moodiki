@@ -85,7 +85,7 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
-            color: _kSurface.withOpacity(0.80),
+            color: _kSurface.withValues(alpha: 0.80),
             child: SafeArea(
               bottom: false,
               child: SizedBox(
