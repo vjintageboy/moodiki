@@ -796,385 +796,391 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
 
   Widget _buildPostCard(NewsPost post) {
     if (post.postId.isEmpty) {
-      final isLikedFallback = post.isLikedBy(currentUserId);
-      return GestureDetector(
-        onTap: () async {
-          final changed = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
-          );
-
-          if (changed == true && mounted) {
-            setState(() {});
-          }
-        },
-        child: _buildPostCardContent(post, isLikedFallback, post.likeCount),
-      );
+      return _buildPostCardContent(post, post.isLikedBy(currentUserId), post.likeCount);
     }
 
     _syncLikeOverridesIfServerCaughtUp(post);
-    final isLiked = _likeState[post.postId] ??
-        post.isLikedBy(currentUserId);
+    final isLiked = _likeState[post.postId] ?? post.isLikedBy(currentUserId);
     final likeCount = _likeCountState[post.postId] ?? post.likeCount;
 
+    return _buildPostCardContent(post, isLiked, likeCount);
+  }
+
+  Widget _buildPostCardContent(NewsPost post, bool isLiked, int likeCount) {
     return GestureDetector(
       onTap: () async {
         final changed = await Navigator.push<bool>(
           context,
           MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
         );
-
-        if (changed == true && mounted) {
-          setState(() {});
-        }
+        if (changed == true && mounted) setState(() {});
       },
-      child: _buildPostCardContent(post, isLiked, likeCount),
-    );
-  }
-
-  Widget _buildPostCardContent(NewsPost post, bool isLiked, int likeCount) {
-    return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: _kSurfaceContainerLowest,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: _kOnSurface.withValues(alpha: 0.06),
+              blurRadius: 32,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            // Header
+            // Main content — left padding 44 to clear avatar
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+              padding: const EdgeInsets.only(left: 44, right: 16, top: 20, bottom: 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Avatar
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: post.authorName == 'Anonymous'
-                        ? Colors.grey.shade300
-                        : AppColors.primaryLight.withValues(alpha: 0.2),
-                    backgroundImage:
-                        post.authorName != 'Anonymous' &&
-                            post.authorAvatarUrl != null &&
-                            post.authorAvatarUrl!.isNotEmpty
-                        ? (_isBase64(post.authorAvatarUrl!)
-                                  ? MemoryImage(
-                                      base64Decode(post.authorAvatarUrl!),
-                                    )
-                                  : NetworkImage(post.authorAvatarUrl!))
-                              as ImageProvider
-                        : null,
-                    child: post.authorName == 'Anonymous'
-                        ? Icon(
-                            Icons.visibility_off,
-                            size: 20,
-                            color: Colors.grey.shade700,
-                          )
-                        : (post.authorAvatarUrl == null || post.authorAvatarUrl!.isEmpty
-                              ? Text(
-                                  post.authorName[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: AppColors.primaryLight,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null),
-                  ),
-                  const SizedBox(width: 12),
-                  // Author info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  // Header row
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    post.authorName,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      color: _kOnSurface,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (post.authorRole == 'expert') ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: _kPrimaryContainer,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Expert',
+                                      style: GoogleFonts.manrope(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: _kPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
                             Text(
-                              post.authorName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
+                              _formatTime(post.createdAt),
+                              style: GoogleFonts.manrope(
+                                fontSize: 12,
+                                color: _kOnSurfaceVariant.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                            if (post.authorRole == 'expert') ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryLight.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  'Expert',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primaryLight,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _formatTime(post.createdAt),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Category badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getCategoryColor(
-                        post.category,
-                      ).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      post.category.categoryDisplayName,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _getCategoryColor(post.category),
                       ),
-                    ),
-                  ),
-                  // Menu button (3 dots) - Only show for own posts or admin
-                  if (post.authorId == currentUserId)
-                    PopupMenuButton<String>(
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: Colors.grey.shade600,
-                        size: 20,
-                      ),
-                      onSelected: (value) => _handlePostAction(value, post),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit_outlined, size: 18),
-                              SizedBox(width: 8),
-                              Text('Edit'),
-                            ],
+                      const SizedBox(width: 8),
+                      _buildCategoryBadge(post),
+                      if (post.authorId == currentUserId)
+                        PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: _kOnSurfaceVariant,
+                            size: 20,
                           ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete_outline,
-                                size: 18,
-                                color: Colors.red,
+                          onSelected: (value) => _handlePostAction(value, post),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Chỉnh sửa'),
+                                ],
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                post.title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Content preview
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                post.content,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                  height: 1.4,
-                ),
-              ),
-            ),
-
-            // Image
-            if (post.imageUrl != null && post.imageUrl!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  post.imageUrl!,
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 200,
-                      color: Colors.grey.shade200,
-                      child: Icon(
-                        Icons.broken_image,
-                        size: 64,
-                        color: Colors.grey.shade400,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 12),
-
-            // Actions (Like, Comment)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  // Like button
-                  InkWell(
-                    onTap: () async {
-                      if (_likeUpdating.contains(post.postId)) return;
-
-                      final previousLiked =
-                          _likeState[post.postId] ??
-                          post.isLikedBy(currentUserId);
-                      final previousCount =
-                          _likeCountState[post.postId] ?? post.likeCount;
-                      final nextLiked = !previousLiked;
-                      final nextCount =
-                          nextLiked ? previousCount + 1 : (previousCount - 1);
-
-                      setState(() {
-                        _likeUpdating.add(post.postId);
-                        _likeState[post.postId] = nextLiked;
-                        _likeCountState[post.postId] =
-                            nextCount < 0 ? 0 : nextCount;
-                      });
-
-                      try {
-                        await _newsService.toggleLike(post.postId, currentUserId);
-                      } catch (e) {
-                        if (!mounted) return;
-                        setState(() {
-                          _likeState[post.postId] = previousLiked;
-                          _likeCountState[post.postId] = previousCount;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Like failed: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      } finally {
-                        if (mounted) {
-                          setState(() {
-                            _likeUpdating.remove(post.postId);
-                          });
-                        }
-                      }
-                    },
-                    child: Row(
-                      children: [
-                        Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_border,
-                          color: isLiked ? Colors.red : Colors.grey.shade600,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$likeCount',
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  // Comment count
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        color: Colors.grey.shade600,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      StreamBuilder<int>(
-                        stream: _newsService.streamCommentCount(post.postId),
-                        builder: (context, snapshot) {
-                          final count = snapshot.data ?? post.commentCount;
-                          return Text(
-                            '$count',
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              fontWeight: FontWeight.w600,
                             ),
-                          );
-                        },
-                      ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline,
+                                      size: 18, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Xóa', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
-                  const Spacer(),
-                  // Share button
-                  Icon(
-                    Icons.share_outlined,
-                    color: Colors.grey.shade600,
-                    size: 20,
+
+                  const SizedBox(height: 12),
+
+                  // Title
+                  Text(
+                    post.title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: _kOnSurface,
+                      height: 1.25,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Content preview
+                  Text(
+                    post.content,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      color: _kOnSurfaceVariant,
+                      height: 1.5,
+                    ),
+                  ),
+
+                  // Image
+                  if (post.imageUrl != null && post.imageUrl!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.network(
+                          post.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: _kSurfaceContainerHighest,
+                            child: const Icon(Icons.broken_image,
+                                size: 48, color: _kOnSurfaceVariant),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 12),
+
+                  // Divider
+                  Container(height: 1, color: _kSurfaceContainer),
+
+                  // Action bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
+                      children: [
+                        // Like
+                        InkWell(
+                          onTap: () => _handleLikeTap(post, isLiked, likeCount),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: isLiked
+                                      ? Colors.red
+                                      : _kOnSurfaceVariant,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$likeCount',
+                                  style: GoogleFonts.manrope(
+                                    color: _kOnSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        // Comment
+                        Row(
+                          children: [
+                            const Icon(Icons.chat_bubble_outline,
+                                color: _kPrimary, size: 20),
+                            const SizedBox(width: 6),
+                            StreamBuilder<int>(
+                              stream:
+                                  _newsService.streamCommentCount(post.postId),
+                              builder: (context, snapshot) {
+                                final count =
+                                    snapshot.data ?? post.commentCount;
+                                return Text(
+                                  '$count',
+                                  style: GoogleFonts.manrope(
+                                    color: _kOnSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        // Share
+                        const Icon(Icons.share_outlined,
+                            color: _kOnSurfaceVariant, size: 20),
+                      ],
+                    ),
                   ),
                 ],
               ),
+            ),
+
+            // Asymmetric avatar — lệch -8px ra ngoài bên trái
+            Positioned(
+              left: -8,
+              top: 20,
+              child: _buildAvatarWidget(post),
             ),
           ],
         ),
-      );
+      ),
+    );
   }
 
   Color _getCategoryColor(PostCategory category) {
     switch (category) {
       case PostCategory.mentalHealth:
-        return Colors.blue;
+        return _kOnSecondaryContainer;
       case PostCategory.meditation:
-        return Colors.purple;
+        return const Color(0xFF7B3FC4); // purple tint
       case PostCategory.wellness:
-        return Colors.green;
+        return _kPrimary;
       case PostCategory.tips:
-        return Colors.orange;
+        return _kOnSecondaryContainer;
       case PostCategory.community:
-        return Colors.pink;
+        return _kOnTertiaryContainer;
       case PostCategory.news:
-        return Colors.teal;
+        return _kOnSurfaceVariant;
+    }
+  }
+
+  Color _getCategoryBgColor(PostCategory category) {
+    switch (category) {
+      case PostCategory.mentalHealth:
+        return _kSecondaryContainer;
+      case PostCategory.meditation:
+        return const Color(0xFFE9D5FF); // purple-100
+      case PostCategory.wellness:
+        return _kPrimaryContainer;
+      case PostCategory.tips:
+        return _kSecondaryContainer;
+      case PostCategory.community:
+        return _kTertiaryContainer;
+      case PostCategory.news:
+        return _kSurfaceContainerHigh;
+    }
+  }
+
+  Widget _buildAvatarWidget(NewsPost post) {
+    final isAnon = post.authorName == 'Anonymous';
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: _kSurface, width: 4),
+      ),
+      child: CircleAvatar(
+        radius: 24,
+        backgroundColor: isAnon ? _kSurfaceContainerHighest : _kPrimaryContainer,
+        backgroundImage: !isAnon &&
+                post.authorAvatarUrl != null &&
+                post.authorAvatarUrl!.isNotEmpty
+            ? (_isBase64(post.authorAvatarUrl!)
+                    ? MemoryImage(base64Decode(post.authorAvatarUrl!))
+                    : NetworkImage(post.authorAvatarUrl!))
+                as ImageProvider
+            : null,
+        child: isAnon
+            ? const Icon(Icons.visibility_off, size: 20, color: _kOnSurfaceVariant)
+            : (post.authorAvatarUrl == null || post.authorAvatarUrl!.isEmpty
+                ? Text(
+                    post.authorName[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: _kPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null),
+      ),
+    );
+  }
+
+  Widget _buildCategoryBadge(NewsPost post) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: _getCategoryBgColor(post.category),
+        borderRadius: BorderRadius.circular(9999),
+      ),
+      child: Text(
+        post.category.categoryDisplayName.toUpperCase(),
+        style: GoogleFonts.manrope(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: _getCategoryColor(post.category),
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  void _handleLikeTap(NewsPost post, bool currentlyLiked, int currentCount) async {
+    if (post.postId.isEmpty) return;
+    if (_likeUpdating.contains(post.postId)) return;
+
+    final nextLiked = !currentlyLiked;
+    final nextCount = nextLiked
+        ? currentCount + 1
+        : (currentCount - 1 < 0 ? 0 : currentCount - 1);
+
+    setState(() {
+      _likeUpdating.add(post.postId);
+      _likeState[post.postId] = nextLiked;
+      _likeCountState[post.postId] = nextCount;
+    });
+
+    try {
+      await _newsService.toggleLike(post.postId, currentUserId);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _likeState[post.postId] = currentlyLiked;
+        _likeCountState[post.postId] = currentCount;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _likeUpdating.remove(post.postId));
     }
   }
 
