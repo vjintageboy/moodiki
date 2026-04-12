@@ -16,6 +16,7 @@ class Meditation {
   final String? thumbnailUrl; // DB: thumbnail_url
   final double rating;        // Không có trong DB, mặc định 0
   final int totalReviews;     // Không có trong DB, mặc định 0
+  final List<double>? embedding; // DB: embedding (pgvector 3072-dim)
 
   Meditation({
     required this.meditationId,
@@ -28,6 +29,7 @@ class Meditation {
     this.thumbnailUrl,
     this.rating = 0.0,
     this.totalReviews = 0,
+    this.embedding,
   });
 
   /// Convert sang Map để INSERT vào Supabase
@@ -61,7 +63,29 @@ class Meditation {
       thumbnailUrl: map['thumbnail_url'] ?? map['thumbnailUrl'],
       rating: (map['rating'] ?? 0.0).toDouble(),
       totalReviews: map['total_reviews'] ?? map['totalReviews'] ?? 0,
+      embedding: _parseEmbedding(map['embedding']),
     );
+  }
+
+  /// Parse embedding from Supabase response (can be `List<dynamic>` or JSON string)
+  static List<double>? _parseEmbedding(dynamic data) {
+    if (data == null) return null;
+    if (data is List) {
+      return data.map((e) => (e as num).toDouble()).toList();
+    }
+    if (data is String) {
+      // Handle string representation like "[0.1, 0.2, ...]"
+      try {
+        final trimmed = data.trim();
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+          final inner = trimmed.substring(1, trimmed.length - 1);
+          return inner.split(',').map((s) => double.parse(s.trim())).toList();
+        }
+      } catch (e) {
+        // Fall through to null
+      }
+    }
+    return null;
   }
 
 
@@ -87,6 +111,7 @@ class Meditation {
     String? thumbnailUrl,
     double? rating,
     int? totalReviews,
+    List<double>? embedding,
   }) {
     return Meditation(
       meditationId: meditationId ?? this.meditationId,
@@ -99,6 +124,7 @@ class Meditation {
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       rating: rating ?? this.rating,
       totalReviews: totalReviews ?? this.totalReviews,
+      embedding: embedding ?? this.embedding,
     );
   }
 }
