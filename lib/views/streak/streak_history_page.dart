@@ -2,6 +2,7 @@ import '../../services/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/services/localization_service.dart';
+import '../../core/constants/app_colors.dart';
 import '../../models/streak.dart';
 
 class StreakHistoryPage extends StatefulWidget {
@@ -31,10 +32,8 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
     setState(() => _isLoading = true);
 
     try {
-      // Recalculate streak first to ensure accuracy
       await _supabaseService.recalculateStreak(user.id);
 
-      // Then load streak data and activity dates
       final streak = await _supabaseService.getStreak(user.id);
       final moodEntries = await _supabaseService.getMoodEntries(user.id);
 
@@ -55,43 +54,44 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.white.withValues(alpha: 0.7),
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back_rounded, color: Colors.grey.shade700),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           context.l10n.streakHistoryTitle,
           style: const TextStyle(
-            color: Colors.black,
+            fontFamily: 'PlusJakartaSans',
+            fontWeight: FontWeight.w800,
             fontSize: 20,
-            fontWeight: FontWeight.w600,
+            color: Color(0xFF0F172A),
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+              child: CircularProgressIndicator(color: AppColors.osPrimary),
             )
           : RefreshIndicator(
               onRefresh: _loadStreakData,
-              color: const Color(0xFF4CAF50),
-              child: SingleChildScrollView(
+              color: AppColors.osPrimary,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 48),
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    _buildStreakStats(),
-                    const SizedBox(height: 16),
-                    _buildCalendarSection(),
-                    const SizedBox(height: 24),
-                    _buildStreakTips(),
-                    const SizedBox(height: 24),
-                  ],
-                ),
+                children: [
+                  const SizedBox(height: 24),
+                  _buildStreakStats(),
+                  const SizedBox(height: 24),
+                  _buildCalendarSection(),
+                  const SizedBox(height: 24),
+                  _buildStreakTips(),
+                ],
               ),
             ),
     );
@@ -101,23 +101,21 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
     final l10n = context.l10n;
     final currentStreak = _streak?.currentStreak ?? 0;
     final longestStreak = _streak?.longestStreak ?? 0;
-    final totalActivities = _streak?.totalActivities ?? 0;
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [AppColors.osPrimary, AppColors.osPrimaryDim],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: AppColors.osPrimary.withValues(alpha: 0.3),
+            blurRadius: 48,
+            offset: const Offset(0, 24),
           ),
         ],
       ),
@@ -133,10 +131,11 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                   l10n.daysUnit,
                 ),
               ),
+              // Tonal separator instead of hard line
               Container(
                 width: 1,
-                height: 60,
-                color: Colors.white.withValues(alpha: 0.3),
+                height: 80,
+                color: Colors.white.withValues(alpha: 0.2),
               ),
               Expanded(
                 child: _buildStatItem(
@@ -148,59 +147,37 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+          // Motivational message
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.check_circle_outline,
+                Icon(
+                  currentStreak > 0
+                      ? Icons.local_fire_department_rounded
+                      : Icons.auto_fix_high_rounded,
                   color: Colors.white,
                   size: 20,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.totalActivities(totalActivities),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.local_fire_department,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
+                const SizedBox(width: 10),
+                Flexible(
                   child: Text(
                     currentStreak > 0
                         ? l10n.keepItUp
                         : l10n.startYourStreak,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
+                      fontFamily: 'Manrope',
                       color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -215,31 +192,35 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
   Widget _buildStatItem(String emoji, String value, String label, String unit) {
     return Column(
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 32)),
+        Text(emoji, style: const TextStyle(fontSize: 36)),
         const SizedBox(height: 8),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 36,
+            fontFamily: 'PlusJakartaSans',
+            fontSize: 40,
             fontWeight: FontWeight.w800,
             color: Colors.white,
+            letterSpacing: -1,
           ),
         ),
         Text(
           unit,
           style: TextStyle(
+            fontFamily: 'Manrope',
             fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.9),
-            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.85),
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
+            fontFamily: 'Manrope',
             fontSize: 13,
-            color: Colors.white.withValues(alpha: 0.9),
-            fontWeight: FontWeight.w600,
+            color: Colors.white.withValues(alpha: 0.85),
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],
@@ -248,15 +229,14 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
 
   Widget _buildCalendarSection() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -264,12 +244,12 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
         children: [
           // Month selector
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left),
+                  icon: Icon(Icons.chevron_left_rounded, color: Colors.grey.shade600),
                   onPressed: () {
                     setState(() {
                       _selectedMonth = DateTime(
@@ -282,12 +262,14 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                 Text(
                   DateFormat('MMMM yyyy').format(_selectedMonth),
                   style: const TextStyle(
+                    fontFamily: 'PlusJakartaSans',
                     fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right),
+                  icon: Icon(Icons.chevron_right_rounded, color: Colors.grey.shade600),
                   onPressed: () {
                     final now = DateTime.now();
                     final nextMonth = DateTime(
@@ -309,13 +291,13 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
 
           // Calendar grid
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: _buildCalendarGrid(),
           ),
 
           // Legend
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: _buildLegend(),
           ),
         ],
@@ -334,7 +316,7 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
       _selectedMonth.month + 1,
       0,
     );
-    final firstWeekday = firstDayOfMonth.weekday % 7;
+    final firstWeekday = (firstDayOfMonth.weekday % 7);
     final daysInMonth = lastDayOfMonth.day;
     final totalCells = ((daysInMonth + firstWeekday) / 7).ceil() * 7;
 
@@ -349,9 +331,10 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                     child: Text(
                       day,
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.grey.shade600,
+                        fontFamily: 'Manrope',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.grey.shade500,
                       ),
                     ),
                   ),
@@ -368,8 +351,8 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 7,
             childAspectRatio: 1,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 6,
           ),
           itemCount: totalCells,
           itemBuilder: (context, index) {
@@ -401,15 +384,17 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
             return Container(
               decoration: BoxDecoration(
                 color: hasActivity
-                    ? const Color(0xFF4CAF50)
+                    ? AppColors.osPrimary
                     : isFuture
-                    ? Colors.grey.shade100
-                    : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isToday ? Colors.blue.shade400 : Colors.transparent,
-                  width: isToday ? 2 : 0,
-                ),
+                    ? Colors.grey.shade50
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
+                border: isToday
+                    ? Border.all(
+                        color: const Color(0xFF60A5FA),
+                        width: 2.5,
+                      )
+                    : null,
               ),
               child: Stack(
                 children: [
@@ -417,20 +402,21 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                     child: Text(
                       '$dayNumber',
                       style: TextStyle(
+                        fontFamily: 'Manrope',
                         fontSize: 14,
                         fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
                         color: hasActivity
                             ? Colors.white
                             : isFuture
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade500,
                       ),
                     ),
                   ),
                   if (hasActivity)
                     Positioned(
-                      top: 2,
-                      right: 2,
+                      top: 4,
+                      right: 4,
                       child: Container(
                         width: 6,
                         height: 6,
@@ -452,26 +438,31 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
   Widget _buildLegend() {
     final l10n = context.l10n;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             l10n.legend,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              fontFamily: 'PlusJakartaSans',
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Wrap(
             spacing: 16,
-            runSpacing: 8,
+            runSpacing: 10,
             children: [
-              _buildLegendItem(const Color(0xFF4CAF50), l10n.hasActivity),
-              _buildLegendItem(Colors.grey.shade200, l10n.noActivity),
-              _buildLegendItem(Colors.grey.shade100, l10n.future),
+              _buildLegendItem(AppColors.osPrimary, l10n.hasActivity),
+              _buildLegendItem(Colors.grey.shade100, l10n.noActivity),
+              _buildLegendItem(Colors.grey.shade50, l10n.future),
             ],
           ),
         ],
@@ -488,13 +479,18 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
           height: 16,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(6),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          style: TextStyle(
+            fontFamily: 'Manrope',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade600,
+          ),
         ),
       ],
     );
@@ -503,16 +499,15 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
   Widget _buildStreakTips() {
     final l10n = context.l10n;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -522,25 +517,30 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.osPrimary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
-                  Icons.lightbulb_outline,
-                  color: Color(0xFF4CAF50),
-                  size: 20,
+                  Icons.lightbulb_outline_rounded,
+                  color: AppColors.osPrimary,
+                  size: 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Text(
                 l10n.streakTips,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontFamily: 'PlusJakartaSans',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildTipItem(l10n.tipDailyMood),
           _buildTipItem(l10n.tipMeditation),
           _buildTipItem(l10n.tipDailyReminder),
@@ -552,27 +552,30 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
 
   Widget _buildTipItem(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Dot indicator
           Container(
-            margin: const EdgeInsets.only(top: 4),
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: Color(0xFF4CAF50),
-              shape: BoxShape.circle,
+            margin: const EdgeInsets.only(top: 6),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: AppColors.osPrimary,
+              borderRadius: BorderRadius.circular(9999),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
+                fontFamily: 'Manrope',
                 fontSize: 14,
-                color: Colors.grey.shade700,
-                height: 1.5,
+                color: Colors.grey.shade600,
+                height: 1.6,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

@@ -517,5 +517,19 @@
   "tipDailyMood": "Log your mood daily to build consistency",
   "tipMeditation": "Complete meditation sessions regularly",
   "tipDailyReminder": "Set daily reminders to check in with yourself",
-  "tipStreakReset": "Streak resets if you miss a day"
+  "tipStreakReset": "Streak resets if you miss a day",
+
+  "moodTrackerTitle": "Mood Tracker",
+  "howAreYouFeelingHero": "Hey there, how are you feeling?",
+  "moodHeroSubtitle": "Take a moment to listen to yourself.",
+  "moodVeryBad": "Very Bad",
+  "moodBad": "Bad",
+  "moodNeutral": "Neutral",
+  "moodExcellent": "Excellent",
+  "chooseManyLabel": "Pick many",
+  "factorsWhatAffect": "What's affecting you?",
+  "notesToday": "Today's Notes",
+  "notesPlaceholder": "Anything special about your day?...",
+  "dailyInspirationQuote": "Each day is a new beginning. Take a deep breath and smile at the world.",
+  "quoteInspirationLabel": "Inspiration for a new day"
 }

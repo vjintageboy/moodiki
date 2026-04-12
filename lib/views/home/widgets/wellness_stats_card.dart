@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../models/streak.dart';
-import 'neumorphic_card.dart';
 
-/// Displays wellness statistics with neumorphic design
+/// Displays wellness statistics with Organic Sanctuary tonal layering design
+/// Follows the "No-Line" rule: boundaries via background color shifts, not borders
 class WellnessStatsCard extends StatelessWidget {
   final Streak? streak;
   final VoidCallback? onTap;
@@ -28,85 +28,100 @@ class WellnessStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NeumorphicCard(
+    return GestureDetector(
       onTap: onTap,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.local_fire_department_rounded,
-                  color: AppColors.warning,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  titleText,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.3,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+              blurRadius: 32,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFF7ED),
+                        Color(0xFFFFEDD5),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.local_fire_department_rounded,
+                    color: AppColors.warning,
+                    size: 24,
                   ),
                 ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: AppColors.textSecondary.withValues(alpha: 0.5),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _StatItem(
-                  label: currentLabel,
-                  value: '${streak?.currentStreak ?? 0}',
-                  unit: daysUnit,
-                  color: AppColors.success,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    titleText,
+                    style: const TextStyle(
+                      fontFamily: 'PlusJakartaSans',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
                 ),
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppColors.borderLight,
-              ),
-              Expanded(
-                child: _StatItem(
-                  label: longestLabel,
-                  value: '${streak?.longestStreak ?? 0}',
-                  unit: daysUnit,
-                  color: AppColors.warning,
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Colors.grey.shade400,
                 ),
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppColors.borderLight,
-              ),
-              Expanded(
-                child: _StatItem(
-                  label: totalLabel,
-                  value: '${streak?.totalActivities ?? 0}',
-                  unit: logsUnit,
-                  color: AppColors.info,
+              ],
+            ),
+            // Whitespace separation instead of dividers
+            const SizedBox(height: 24),
+            // Stats row with whitespace separation
+            Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: currentLabel,
+                    value: '${streak?.currentStreak ?? 0}',
+                    unit: daysUnit,
+                    color: AppColors.osPrimary,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                // Whitespace gap for separation
+                const SizedBox(width: 20),
+                Expanded(
+                  child: _StatItem(
+                    label: longestLabel,
+                    value: '${streak?.longestStreak ?? 0}',
+                    unit: daysUnit,
+                    color: AppColors.warning,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: _StatItem(
+                    label: totalLabel,
+                    value: '${streak?.totalActivities ?? 0}',
+                    unit: logsUnit,
+                    color: AppColors.info,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -131,21 +146,23 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
+            fontFamily: 'Manrope',
             fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade500,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         RichText(
           text: TextSpan(
             children: [
               TextSpan(
                 text: value,
                 style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
+                  fontFamily: 'PlusJakartaSans',
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
                   color: color,
                   letterSpacing: -0.5,
                 ),
@@ -153,9 +170,10 @@ class _StatItem extends StatelessWidget {
               TextSpan(
                 text: ' $unit',
                 style: TextStyle(
+                  fontFamily: 'Manrope',
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade400,
                 ),
               ),
             ],

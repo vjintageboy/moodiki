@@ -517,5 +517,19 @@
   "tipDailyMood": "Ghi nhận tâm trạng hàng ngày để xây dựng thói quen",
   "tipMeditation": "Hoàn thành các buổi thiền định thường xuyên",
   "tipDailyReminder": "Đặt nhắc nhở hàng ngày để tự kiểm tra",
-  "tipStreakReset": "Chuỗi sẽ reset nếu bạn bỏ lỡ một ngày"
+  "tipStreakReset": "Chuỗi sẽ reset nếu bạn bỏ lỡ một ngày",
+
+  "moodTrackerTitle": "Theo Dõi Tâm Trạng",
+  "howAreYouFeelingHero": "Chào bạn, tâm trạng bạn thế nào?",
+  "moodHeroSubtitle": "Hãy dành một phút để lắng nghe bản thân mình.",
+  "moodVeryBad": "Rất tệ",
+  "moodBad": "Tệ",
+  "moodNeutral": "Ổn",
+  "moodExcellent": "Tuyệt vời",
+  "chooseManyLabel": "Chọn nhiều mục",
+  "factorsWhatAffect": "Điều gì ảnh hưởng đến bạn?",
+  "notesToday": "Ghi chú hôm nay",
+  "notesPlaceholder": "Hôm nay của bạn có gì đặc biệt không?...",
+  "dailyInspirationQuote": "\"Mỗi ngày là một khởi đầu mới. Hãy hít một hơi thật sâu và mỉm cười với thế giới.\"",
+  "quoteInspirationLabel": "Cảm hứng cho ngày mới"
 }

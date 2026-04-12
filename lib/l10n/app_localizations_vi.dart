@@ -1094,4 +1094,45 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tipStreakReset => 'Chuỗi sẽ reset nếu bạn bỏ lỡ một ngày';
+
+  @override
+  String get moodTrackerTitle => 'Theo Dõi Tâm Trạng';
+
+  @override
+  String get howAreYouFeelingHero => 'Chào bạn, tâm trạng bạn thế nào?';
+
+  @override
+  String get moodHeroSubtitle =>
+      'Hãy dành một phút để lắng nghe bản thân mình.';
+
+  @override
+  String get moodVeryBad => 'Rất tệ';
+
+  @override
+  String get moodBad => 'Tệ';
+
+  @override
+  String get moodNeutral => 'Ổn';
+
+  @override
+  String get moodExcellent => 'Tuyệt vời';
+
+  @override
+  String get chooseManyLabel => 'Chọn nhiều mục';
+
+  @override
+  String get factorsWhatAffect => 'Điều gì ảnh hưởng đến bạn?';
+
+  @override
+  String get notesToday => 'Ghi chú hôm nay';
+
+  @override
+  String get notesPlaceholder => 'Hôm nay của bạn có gì đặc biệt không?...';
+
+  @override
+  String get dailyInspirationQuote =>
+      '\"Mỗi ngày là một khởi đầu mới. Hãy hít một hơi thật sâu và mỉm cười với thế giới.\"';
+
+  @override
+  String get quoteInspirationLabel => 'Cảm hứng cho ngày mới';
 }

@@ -2197,6 +2197,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Streak resets if you miss a day'**
   String get tipStreakReset;
+
+  /// No description provided for @moodTrackerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Tracker'**
+  String get moodTrackerTitle;
+
+  /// No description provided for @howAreYouFeelingHero.
+  ///
+  /// In en, this message translates to:
+  /// **'Hey there, how are you feeling?'**
+  String get howAreYouFeelingHero;
+
+  /// No description provided for @moodHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a moment to listen to yourself.'**
+  String get moodHeroSubtitle;
+
+  /// No description provided for @moodVeryBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Bad'**
+  String get moodVeryBad;
+
+  /// No description provided for @moodBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Bad'**
+  String get moodBad;
+
+  /// No description provided for @moodNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get moodNeutral;
+
+  /// No description provided for @moodExcellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent'**
+  String get moodExcellent;
+
+  /// No description provided for @chooseManyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick many'**
+  String get chooseManyLabel;
+
+  /// No description provided for @factorsWhatAffect.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s affecting you?'**
+  String get factorsWhatAffect;
+
+  /// No description provided for @notesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Notes'**
+  String get notesToday;
+
+  /// No description provided for @notesPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything special about your day?...'**
+  String get notesPlaceholder;
+
+  /// No description provided for @dailyInspirationQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Each day is a new beginning. Take a deep breath and smile at the world.'**
+  String get dailyInspirationQuote;
+
+  /// No description provided for @quoteInspirationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspiration for a new day'**
+  String get quoteInspirationLabel;
 }
 
 class _AppLocalizationsDelegate

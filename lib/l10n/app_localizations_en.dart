@@ -1087,4 +1087,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tipStreakReset => 'Streak resets if you miss a day';
+
+  @override
+  String get moodTrackerTitle => 'Mood Tracker';
+
+  @override
+  String get howAreYouFeelingHero => 'Hey there, how are you feeling?';
+
+  @override
+  String get moodHeroSubtitle => 'Take a moment to listen to yourself.';
+
+  @override
+  String get moodVeryBad => 'Very Bad';
+
+  @override
+  String get moodBad => 'Bad';
+
+  @override
+  String get moodNeutral => 'Neutral';
+
+  @override
+  String get moodExcellent => 'Excellent';
+
+  @override
+  String get chooseManyLabel => 'Pick many';
+
+  @override
+  String get factorsWhatAffect => 'What\'s affecting you?';
+
+  @override
+  String get notesToday => 'Today\'s Notes';
+
+  @override
+  String get notesPlaceholder => 'Anything special about your day?...';
+
+  @override
+  String get dailyInspirationQuote =>
+      'Each day is a new beginning. Take a deep breath and smile at the world.';
+
+  @override
+  String get quoteInspirationLabel => 'Inspiration for a new day';
 }
