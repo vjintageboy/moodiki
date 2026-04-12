@@ -531,5 +531,35 @@
   "notesToday": "Today's Notes",
   "notesPlaceholder": "Anything special about your day?...",
   "dailyInspirationQuote": "Each day is a new beginning. Take a deep breath and smile at the world.",
-  "quoteInspirationLabel": "Inspiration for a new day"
+  "quoteInspirationLabel": "Inspiration for a new day",
+
+  "moodAnalyticsTitle": "Mood Analytics",
+  "week": "Week",
+  "month": "Month",
+  "year": "Year",
+  "averageMood": "Average Mood",
+  "totalEntries": "Total Entries",
+  "moodTrend": "Mood Trend",
+  "moodDistribution": "Mood Distribution",
+  "topInfluencingFactors": "Top Influencing Factors",
+  "highlights": "Highlights",
+  "bestDay": "Best Day",
+  "needsAttention": "Needs Attention",
+  "noDataThisPeriod": "No data for this period",
+  "startLoggingMoodAnalytics": "Start logging your mood to see analytics",
+  "errorLoadingMoodData": "Error loading mood data: {error}",
+  "@errorLoadingMoodData": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noDataToDisplay": "No data to display",
+  "data": "Data",
+  "flow": "Flow",
+  "growth": "Growth",
+  "currentStreak": "Current Streak",
+  "keyInfluencers": "Key Influencers",
+  "moodTrends": "Mood Trends",
+  "distribution": "Distribution",
+  "monthlyHighlights": "Monthly Highlights"
 }

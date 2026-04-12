@@ -1,8 +1,20 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/mood_entry.dart';
 import '../../core/services/localization_service.dart';
 import '../../services/supabase_service.dart';
+
+// ── Organic Sanctuary palette ─────────────────────────────────────────────
+const _kSurface = Color(0xFFDDFFE2);
+const _kSurfaceContainerLow = Color(0xFFCAFDD4);
+const _kSurfaceContainerHigh = Color(0xFFB5F0C2);
+const _kSurfaceContainerHighest = Color(0xFFACECBB);
+const _kSurfaceContainerLowest = Color(0xFFFFFFFF);
+const _kOnSurface = Color(0xFF0B361D);
+const _kOnSurfaceVariant = Color(0xFF3B6447);
+const _kPrimary = Color(0xFF006B1B);
 
 class MoodAnalyticsPage extends StatefulWidget {
   const MoodAnalyticsPage({super.key});
@@ -15,7 +27,7 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   List<MoodEntry> _moodEntries = [];
   bool _isLoading = true;
-  String _selectedPeriod = 'week'; // week, month, year
+  String _selectedPeriod = 'week';
 
   @override
   void initState() {
@@ -62,183 +74,166 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading mood data: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.errorLoadingMoodData(e.toString()),
+              style: GoogleFonts.manrope(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: _kPrimary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
       }
     }
   }
 
-  // Calculate average mood
+  // ── Computed properties ───────────────────────────────────────────────────
+
   double get _averageMood {
     if (_moodEntries.isEmpty) return 0.0;
-    final sum = _moodEntries.fold<int>(
-      0,
-      (sum, entry) => sum + entry.moodLevel,
-    );
-    return sum / _moodEntries.length;
+    return _moodEntries.fold<int>(0, (s, e) => s + e.moodLevel) /
+        _moodEntries.length;
   }
 
-  // Get mood distribution (count for each level)
   Map<int, int> get _moodDistribution {
-    final distribution = <int, int>{1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
-    for (var entry in _moodEntries) {
-      distribution[entry.moodLevel] = (distribution[entry.moodLevel] ?? 0) + 1;
+    final d = <int, int>{1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+    for (var e in _moodEntries) {
+      d[e.moodLevel] = (d[e.moodLevel] ?? 0) + 1;
     }
-    return distribution;
+    return d;
   }
 
-  // Get most common emotion factors
   Map<String, int> get _emotionFactorFrequency {
-    final frequency = <String, int>{};
-    for (var entry in _moodEntries) {
-      for (var factor in entry.emotionFactors) {
-        frequency[factor] = (frequency[factor] ?? 0) + 1;
+    final freq = <String, int>{};
+    for (var e in _moodEntries) {
+      for (var f in e.emotionFactors) {
+        freq[f] = (freq[f] ?? 0) + 1;
       }
     }
     return Map.fromEntries(
-      frequency.entries.toList()..sort((a, b) => b.value.compareTo(a.value)),
+      freq.entries.toList()..sort((a, b) => b.value.compareTo(a.value)),
     );
   }
 
-  // Find best and worst day
-  MoodEntry? get _bestDay {
-    if (_moodEntries.isEmpty) return null;
-    return _moodEntries.reduce((a, b) => a.moodLevel > b.moodLevel ? a : b);
-  }
+  MoodEntry? get _bestDay =>
+      _moodEntries.isEmpty
+          ? null
+          : _moodEntries.reduce((a, b) => a.moodLevel > b.moodLevel ? a : b);
 
-  MoodEntry? get _worstDay {
-    if (_moodEntries.isEmpty) return null;
-    return _moodEntries.reduce((a, b) => a.moodLevel < b.moodLevel ? a : b);
-  }
+  MoodEntry? get _worstDay =>
+      _moodEntries.isEmpty
+          ? null
+          : _moodEntries.reduce((a, b) => a.moodLevel < b.moodLevel ? a : b);
+
+  // ── Mood helpers ──────────────────────────────────────────────────────────
 
   String _getMoodEmoji(int level) {
     switch (level) {
-      case 1:
-        return '😞';
-      case 2:
-        return '😕';
-      case 3:
-        return '😐';
-      case 4:
-        return '🙂';
-      case 5:
-        return '😄';
-      default:
-        return '😐';
+      case 1: return '😫';
+      case 2: return '😞';
+      case 3: return '😐';
+      case 4: return '😊';
+      case 5: return '🤩';
+      default: return '😐';
     }
   }
 
   String _getMoodLabel(int level) {
     switch (level) {
-      case 1:
-        return context.l10n.veryPoor;
-      case 2:
-        return context.l10n.poor;
-      case 3:
-        return context.l10n.okay;
-      case 4:
-        return context.l10n.good;
-      case 5:
-        return context.l10n.excellent;
-      default:
-        return context.l10n.okay;
+      case 1: return context.l10n.veryPoor;
+      case 2: return context.l10n.poor;
+      case 3: return context.l10n.okay;
+      case 4: return context.l10n.good;
+      case 5: return context.l10n.excellent;
+      default: return context.l10n.okay;
     }
   }
 
   Color _getMoodColor(int level) {
     switch (level) {
-      case 1:
-        return Colors.red.shade400;
-      case 2:
-        return Colors.orange.shade400;
-      case 3:
-        return Colors.yellow.shade700;
-      case 4:
-        return Colors.lightGreen.shade600;
-      case 5:
-        return Colors.green.shade600;
-      default:
-        return Colors.grey;
+      case 1: return const Color(0xFFE53935);
+      case 2: return const Color(0xFFFB8C00);
+      case 3: return const Color(0xFFF9A825);
+      case 4: return const Color(0xFF7CB342);
+      case 5: return const Color(0xFF2E7D32);
+      default: return _kOnSurfaceVariant;
     }
   }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: _kSurface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: _kSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _kPrimary,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Mood Analytics',
-          style: TextStyle(
-            color: Colors.black,
+        title: Text(
+          context.l10n.moodAnalyticsTitle,
+          style: GoogleFonts.plusJakartaSans(
+            color: _kPrimary,
             fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ),
         ),
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
-            )
+          ? const Center(child: CircularProgressIndicator(color: _kPrimary))
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Period selector
-                    _buildPeriodSelector(),
-                    const SizedBox(height: 24),
-
-                    // Overview cards
-                    if (_moodEntries.isNotEmpty) ...[
-                      _buildOverviewCards(),
-                      const SizedBox(height: 24),
-
-                      // Mood trend chart
-                      _buildMoodTrendChart(),
-                      const SizedBox(height: 24),
-
-                      // Mood distribution
-                      _buildMoodDistribution(),
-                      const SizedBox(height: 24),
-
-                      // Top emotion factors
-                      _buildTopEmotionFactors(),
-                      const SizedBox(height: 24),
-
-                      // Best & Worst days
-                      _buildBestWorstDays(),
-                    ] else
-                      _buildEmptyState(),
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPeriodSelector(),
+                  const SizedBox(height: 24),
+                  if (_moodEntries.isNotEmpty) ...[
+                    _buildOverviewCards(),
+                    const SizedBox(height: 20),
+                    _buildMoodTrendChart(),
+                    const SizedBox(height: 20),
+                    _buildMoodDistribution(),
+                    const SizedBox(height: 20),
+                    _buildTopEmotionFactors(),
+                    const SizedBox(height: 20),
+                    _buildBestWorstDays(),
+                  ] else
+                    _buildEmptyState(),
+                ],
               ),
             ),
     );
   }
 
+  // ── Period selector ───────────────────────────────────────────────────────
+
   Widget _buildPeriodSelector() {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        color: _kSurfaceContainerLow,
+        borderRadius: BorderRadius.circular(100),
       ),
       child: Row(
         children: [
-          _buildPeriodButton('Week', 'week'),
-          _buildPeriodButton('Month', 'month'),
-          _buildPeriodButton('Year', 'year'),
+          _buildPeriodButton(context.l10n.week, 'week'),
+          _buildPeriodButton(context.l10n.month, 'month'),
+          _buildPeriodButton(context.l10n.year, 'year'),
         ],
       ),
     );
@@ -252,19 +247,30 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
           setState(() => _selectedPeriod = value);
           _loadMoodData();
         },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            color: isSelected ? _kPrimary : Colors.transparent,
+            borderRadius: BorderRadius.circular(100),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: _kPrimary.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: GoogleFonts.manrope(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : Colors.grey.shade700,
+              fontWeight: FontWeight.w700,
+              color: isSelected ? Colors.white : _kOnSurfaceVariant,
             ),
           ),
         ),
@@ -272,47 +278,122 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
     );
   }
 
+  // ── Overview stat cards ───────────────────────────────────────────────────
+
   Widget _buildOverviewCards() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildStatCard(
-            title: 'Average Mood',
-            value: _averageMood.toStringAsFixed(1),
-            emoji: _getMoodEmoji(_averageMood.round()),
-            color: _getMoodColor(_averageMood.round()),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                emoji: _getMoodEmoji(_averageMood.round()),
+                value: _averageMood.toStringAsFixed(1),
+                subtitle: context.l10n.averageMood,
+                label: context.l10n.mood,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                emoji: '📊',
+                value: _moodEntries.length.toString(),
+                subtitle: context.l10n.totalEntries,
+                label: context.l10n.data,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            title: 'Total Entries',
-            value: _moodEntries.length.toString(),
-            emoji: '📊',
-            color: const Color(0xFF2196F3),
-          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                emoji: '🔥',
+                value: '${_calculateStreak()} ${context.l10n.days}',
+                subtitle: context.l10n.currentStreak,
+                label: context.l10n.flow,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                emoji: '↑',
+                value: '+${_calculateTrend()}%',
+                subtitle: context.l10n.moodTrend,
+                label: context.l10n.growth,
+                valueColor: const Color(0xFF006B1B),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
+  int _calculateStreak() {
+    if (_moodEntries.isEmpty) return 0;
+    final sorted = List<MoodEntry>.from(_moodEntries)
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    
+    int streak = 1;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    for (int i = 0; i < sorted.length - 1; i++) {
+      final current = DateTime(sorted[i].timestamp.year, sorted[i].timestamp.month, sorted[i].timestamp.day);
+      final next = DateTime(sorted[i + 1].timestamp.year, sorted[i + 1].timestamp.month, sorted[i + 1].timestamp.day);
+      
+      if (current.difference(next).inDays == 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    // Check if the most recent entry is today or yesterday
+    final mostRecent = DateTime(sorted.first.timestamp.year, sorted.first.timestamp.month, sorted.first.timestamp.day);
+    if (today.difference(mostRecent).inDays > 1) {
+      return 0;
+    }
+    
+    return streak;
+  }
+
+  int _calculateTrend() {
+    if (_moodEntries.length < 2) return 0;
+    final sorted = List<MoodEntry>.from(_moodEntries)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    
+    final mid = sorted.length ~/ 2;
+    final firstHalf = sorted.sublist(0, mid);
+    final secondHalf = sorted.sublist(mid);
+    
+    final firstAvg = firstHalf.fold<int>(0, (s, e) => s + e.moodLevel) / firstHalf.length;
+    final secondAvg = secondHalf.fold<int>(0, (s, e) => s + e.moodLevel) / secondHalf.length;
+    
+    if (firstAvg == 0) return 0;
+    return ((secondAvg - firstAvg) / firstAvg * 100).round();
+  }
+
   Widget _buildStatCard({
-    required String title,
-    required String value,
     required String emoji,
-    required Color color,
+    required String value,
+    required String subtitle,
+    required String label,
+    Color? valueColor,
   }) {
+    final color = valueColor ?? _kOnSurface;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        color: _kSurfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: _kOnSurface.withValues(alpha: 0.06),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -322,25 +403,35 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(emoji, style: const TextStyle(fontSize: 28)),
               Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade600,
+                label.toUpperCase(),
+                style: GoogleFonts.manrope(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: _kOnSurfaceVariant.withValues(alpha: 0.6),
+                  letterSpacing: 0.5,
                 ),
               ),
-              Text(emoji, style: const TextStyle(fontSize: 20)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: TextStyle(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 28,
               fontWeight: FontWeight.w800,
               color: color,
-              letterSpacing: -0.5,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: GoogleFonts.manrope(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _kOnSurfaceVariant.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -348,196 +439,263 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
     );
   }
 
+  // ── Mood trend chart ──────────────────────────────────────────────────────
+
   Widget _buildMoodTrendChart() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Mood Trend',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 14),
+          child: Text(
+            context.l10n.moodTrends,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: _kOnSurface,
+            ),
           ),
-          const SizedBox(height: 20),
-          SizedBox(height: 200, child: _MoodLineChart(entries: _moodEntries)),
-        ],
-      ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: _kSurfaceContainerLowest,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: _kOnSurface.withValues(alpha: 0.06),
+                blurRadius: 32,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: SizedBox(
+            height: 200,
+            child: _MoodLineChart(entries: _moodEntries),
+          ),
+        ),
+      ],
     );
   }
+
+  // ── Mood distribution ─────────────────────────────────────────────────────
 
   Widget _buildMoodDistribution() {
     final distribution = _moodDistribution;
     final total = _moodEntries.length;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Mood Distribution',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 14),
+          child: Text(
+            context.l10n.distribution,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: _kOnSurface,
+            ),
           ),
-          const SizedBox(height: 16),
-          ...distribution.entries.map((entry) {
-            final percentage = total > 0 ? (entry.value / total) : 0.0;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        _getMoodEmoji(entry.key),
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _getMoodLabel(entry.key),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${entry.value} (${(percentage * 100).toStringAsFixed(0)}%)',
-                        style: TextStyle(
+        ),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: _kSurfaceContainerLowest,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: _kOnSurface.withValues(alpha: 0.06),
+                blurRadius: 32,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+        children: distribution.entries.map((entry) {
+          final percentage = total > 0 ? entry.value / total : 0.0;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      _getMoodEmoji(entry.key),
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _getMoodLabel(entry.key),
+                        style: GoogleFonts.manrope(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                          color: _kOnSurface,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: percentage,
-                      backgroundColor: Colors.grey.shade200,
-                      color: _getMoodColor(entry.key),
-                      minHeight: 8,
                     ),
+                    Text(
+                      '${entry.value} (${(percentage * 100).toStringAsFixed(0)}%)',
+                      style: GoogleFonts.manrope(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _kOnSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: LinearProgressIndicator(
+                    value: percentage,
+                    backgroundColor: _kSurfaceContainerLow,
+                    color: _getMoodColor(entry.key),
+                    minHeight: 8,
                   ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+          ),
+        ),
+      ],
     );
   }
+
+  // ── Key Influencers ───────────────────────────────────────────────────────
 
   Widget _buildTopEmotionFactors() {
-    final topFactors = _emotionFactorFrequency.entries.take(5).toList();
-
+    final topFactors = _emotionFactorFrequency.entries.take(8).toList();
     if (topFactors.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Top Influencing Factors',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 14),
+          child: Text(
+            context.l10n.keyInfluencers,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: _kOnSurface,
+            ),
           ),
-          const SizedBox(height: 16),
-          ...topFactors.map((entry) {
-            final maxCount = topFactors.first.value;
-            final percentage = entry.value / maxCount;
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: topFactors.map((entry) => _buildInfluencerChip(entry.key, entry.value)).toList(),
+        ),
+      ],
+    );
+  }
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      entry.key,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: percentage,
-                        backgroundColor: Colors.grey.shade200,
-                        color: const Color(0xFF4CAF50),
-                        minHeight: 8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${entry.value}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ],
+  Widget _buildInfluencerChip(String label, int count) {
+    final icon = _getInfluencerIcon(label);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: _kSurfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: _kPrimary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: _kOnSurface,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: _kPrimary,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '$count',
+              style: GoogleFonts.manrope(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
-            );
-          }),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  IconData _getInfluencerIcon(String factor) {
+    final lower = factor.toLowerCase();
+    if (lower.contains('work') || lower.contains('job') || lower.contains('career')) {
+      return Icons.work_outline_rounded;
+    } else if (lower.contains('family') || lower.contains('home')) {
+      return Icons.family_restroom_rounded;
+    } else if (lower.contains('exercise') || lower.contains('sport') || lower.contains('fitness')) {
+      return Icons.fitness_center_rounded;
+    } else if (lower.contains('health') || lower.contains('medical')) {
+      return Icons.eco_outlined;
+    } else if (lower.contains('social') || lower.contains('friend')) {
+      return Icons.groups_outlined;
+    } else if (lower.contains('sleep')) {
+      return Icons.bedtime_outlined;
+    } else if (lower.contains('finance') || lower.contains('money')) {
+      return Icons.attach_money_rounded;
+    } else if (lower.contains('love') || lower.contains('relationship')) {
+      return Icons.favorite_outline_rounded;
+    }
+    return Icons.label_outline_rounded;
+  }
+
+  // ── Best & Worst days ─────────────────────────────────────────────────────
 
   Widget _buildBestWorstDays() {
     final best = _bestDay;
     final worst = _worstDay;
-
     if (best == null || worst == null) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Highlights',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 14),
+          child: Text(
+            context.l10n.monthlyHighlights,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: _kOnSurface,
+            ),
+          ),
         ),
-        const SizedBox(height: 12),
         _buildHighlightCard(
-          title: 'Best Day',
+          title: context.l10n.bestDay,
           emoji: _getMoodEmoji(best.moodLevel),
           date: DateFormat('MMM dd, yyyy').format(best.timestamp),
           moodLevel: best.moodLevel,
-          color: Colors.green.shade50,
-          borderColor: Colors.green.shade200,
+          accentColor: const Color(0xFF2E7D32),
+          bgColor: const Color(0xFFEAF7EA),
         ),
         const SizedBox(height: 12),
         _buildHighlightCard(
-          title: 'Needs Attention',
+          title: context.l10n.needsAttention,
           emoji: _getMoodEmoji(worst.moodLevel),
           date: DateFormat('MMM dd, yyyy').format(worst.timestamp),
           moodLevel: worst.moodLevel,
-          color: Colors.orange.shade50,
-          borderColor: Colors.orange.shade200,
+          accentColor: const Color(0xFFE65100),
+          bgColor: const Color(0xFFFFF3E0),
         ),
       ],
     );
@@ -548,38 +706,55 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
     required String emoji,
     required String date,
     required int moodLevel,
-    required Color color,
-    required Color borderColor,
+    required Color accentColor,
+    required Color bgColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor, width: 1.5),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 32)),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 32)),
+            ),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(
+                  date,
+                  style: GoogleFonts.manrope(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade700,
+                    color: _kOnSurfaceVariant.withValues(alpha: 0.8),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  date,
-                  style: const TextStyle(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    color: _kOnSurface,
                   ),
                 ),
               ],
@@ -588,15 +763,16 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: _getMoodColor(moodLevel),
-              borderRadius: BorderRadius.circular(8),
+              color: accentColor,
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
-              _getMoodLabel(moodLevel),
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              _getMoodLabel(moodLevel).toUpperCase(),
+              style: GoogleFonts.manrope(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
                 color: Colors.white,
+                letterSpacing: 0.5,
               ),
             ),
           ),
@@ -605,34 +781,55 @@ class _MoodAnalyticsPageState extends State<MoodAnalyticsPage> {
     );
   }
 
+  // ── Empty state ───────────────────────────────────────────────────────────
+
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 60),
-          Icon(Icons.analytics_outlined, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          Text(
-            'No data for this period',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 64),
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: _kSurfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.analytics_outlined,
+                size: 40,
+                color: _kOnSurfaceVariant,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Start logging your mood to see analytics',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Text(
+              context.l10n.noDataThisPeriod,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: _kOnSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.startLoggingMoodAnalytics,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.manrope(
+                fontSize: 14,
+                color: _kOnSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
 }
 
-// Simple Line Chart Widget
+// ── Line chart ────────────────────────────────────────────────────────────
+
 class _MoodLineChart extends StatelessWidget {
   final List<MoodEntry> entries;
 
@@ -643,18 +840,17 @@ class _MoodLineChart extends StatelessWidget {
     if (entries.isEmpty) {
       return Center(
         child: Text(
-          'No data to display',
-          style: TextStyle(color: Colors.grey.shade500),
+          context.l10n.noDataToDisplay,
+          style: GoogleFonts.manrope(color: _kOnSurfaceVariant),
         ),
       );
     }
 
-    // Sort by date
-    final sortedEntries = List<MoodEntry>.from(entries)
+    final sorted = List<MoodEntry>.from(entries)
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     return CustomPaint(
-      painter: _LineChartPainter(sortedEntries),
+      painter: _LineChartPainter(sorted),
       child: Container(),
     );
   }
@@ -665,72 +861,136 @@ class _LineChartPainter extends CustomPainter {
 
   _LineChartPainter(this.entries);
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (entries.isEmpty) return;
-
-    final paint = Paint()
-      ..color = const Color(0xFF4CAF50)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final pointPaint = Paint()
-      ..color = const Color(0xFF4CAF50)
-      ..style = PaintingStyle.fill;
-
-    final gridPaint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1;
-
-    // Draw grid lines
-    for (int i = 0; i <= 5; i++) {
-      final y = size.height - (i * size.height / 5);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-
-    // Calculate points
-    final path = Path();
-    final points = <Offset>[];
-
-    for (int i = 0; i < entries.length; i++) {
-      // Validate mood level (must be 1-5)
-      final moodLevel = entries[i].moodLevel.clamp(1, 5);
-
-      // Handle single entry case to avoid division by zero
-      final x = entries.length > 1
-          ? (i / (entries.length - 1)) * size.width
-          : size.width / 2; // Center the single point
-
-      // Calculate y position (moodLevel 1-5 mapped to height)
-      final normalizedMood = (moodLevel - 1) / 4; // 0.0 to 1.0
-      final y = size.height - (normalizedMood * size.height);
-
-      // Validate coordinates before adding
-      if (!x.isNaN && !y.isNaN && x.isFinite && y.isFinite) {
-        points.add(Offset(x, y));
-
-        if (i == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-    }
-
-    // Only draw if we have valid points
-    if (points.isNotEmpty) {
-      // Draw line
-      canvas.drawPath(path, paint);
-
-      // Draw points
-      for (final point in points) {
-        canvas.drawCircle(point, 5, pointPaint);
-        canvas.drawCircle(point, 7, paint);
-      }
+  Color _moodColor(int level) {
+    switch (level) {
+      case 1: return const Color(0xFFE53935);
+      case 2: return const Color(0xFFFB8C00);
+      case 3: return const Color(0xFFF9A825);
+      case 4: return const Color(0xFF7CB342);
+      case 5: return const Color(0xFF2E7D32);
+      default: return _kPrimary;
     }
   }
 
   @override
-  bool shouldRepaint(_LineChartPainter oldDelegate) => true;
+  void paint(Canvas canvas, Size size) {
+    if (entries.isEmpty) return;
+
+    // Grid
+    final gridPaint = Paint()
+      ..color = _kSurfaceContainerHigh.withValues(alpha: 0.5)
+      ..strokeWidth = 1;
+
+    for (int i = 0; i <= 4; i++) {
+      final y = size.height - (i * size.height / 4) - 20;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // Gradient fill under the line
+    final points = <Offset>[];
+    for (int i = 0; i < entries.length; i++) {
+      final level = entries[i].moodLevel.clamp(1, 5);
+      final x = entries.length > 1
+          ? (i / (entries.length - 1)) * size.width
+          : size.width / 2;
+      final normalized = (level - 1) / 4;
+      final y = size.height - (normalized * (size.height - 30) * 0.9) - 24;
+      if (x.isFinite && y.isFinite) points.add(Offset(x, y));
+    }
+
+    if (points.isEmpty) return;
+
+    // Fill path with smoother curve
+    final fillPath = Path()..moveTo(points.first.dx, size.height - 20);
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = points[i];
+      final p1 = points[i + 1];
+      final midX = (p0.dx + p1.dx) / 2;
+      fillPath.quadraticBezierTo(p0.dx, p0.dy, midX, (p0.dy + p1.dy) / 2);
+    }
+    fillPath
+      ..lineTo(points.last.dx, size.height - 20)
+      ..close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          _kPrimary.withValues(alpha: 0.15),
+          _kPrimary.withValues(alpha: 0.02),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(fillPath, fillPaint);
+
+    // Line with smoother curve
+    final linePaint = Paint()
+      ..color = _kPrimary
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final linePath = Path()..moveTo(points.first.dx, points.first.dy);
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = points[i];
+      final p1 = points[i + 1];
+      final midX = (p0.dx + p1.dx) / 2;
+      final midY = (p0.dy + p1.dy) / 2;
+      linePath.quadraticBezierTo(p0.dx, p0.dy, midX, midY);
+    }
+    canvas.drawPath(linePath, linePaint);
+
+    // Dots — colour-coded per mood level
+    for (int i = 0; i < points.length; i++) {
+      final level = entries[i].moodLevel.clamp(1, 5);
+      final color = _moodColor(level);
+
+      // White ring
+      canvas.drawCircle(
+        points[i],
+        7,
+        Paint()..color = Colors.white,
+      );
+      // Coloured fill
+      canvas.drawCircle(
+        points[i],
+        5,
+        Paint()..color = color,
+      );
+    }
+
+    // Day labels
+    final dayLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    final textPainter = TextPainter(
+      textAlign: TextAlign.center,
+      textDirection: ui.TextDirection.ltr,
+    );
+    
+    for (int i = 0; i < entries.length && i < dayLabels.length; i++) {
+      final x = entries.length > 1
+          ? (i / (entries.length - 1)) * size.width
+          : size.width / 2;
+      
+      textPainter.text = TextSpan(
+        text: dayLabels[i],
+        style: GoogleFonts.manrope(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: _kOnSurfaceVariant.withValues(alpha: 0.6),
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(x - textPainter.width / 2, size.height - 16),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LineChartPainter old) =>
+      old.entries != entries;
 }

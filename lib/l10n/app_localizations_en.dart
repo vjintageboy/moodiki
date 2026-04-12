@@ -1127,4 +1127,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quoteInspirationLabel => 'Inspiration for a new day';
+
+  @override
+  String get moodAnalyticsTitle => 'Mood Analytics';
+
+  @override
+  String get week => 'Week';
+
+  @override
+  String get month => 'Month';
+
+  @override
+  String get year => 'Year';
+
+  @override
+  String get averageMood => 'Average Mood';
+
+  @override
+  String get totalEntries => 'Total Entries';
+
+  @override
+  String get moodTrend => 'Mood Trend';
+
+  @override
+  String get moodDistribution => 'Mood Distribution';
+
+  @override
+  String get topInfluencingFactors => 'Top Influencing Factors';
+
+  @override
+  String get highlights => 'Highlights';
+
+  @override
+  String get bestDay => 'Best Day';
+
+  @override
+  String get needsAttention => 'Needs Attention';
+
+  @override
+  String get noDataThisPeriod => 'No data for this period';
+
+  @override
+  String get startLoggingMoodAnalytics =>
+      'Start logging your mood to see analytics';
+
+  @override
+  String errorLoadingMoodData(String error) {
+    return 'Error loading mood data: $error';
+  }
+
+  @override
+  String get noDataToDisplay => 'No data to display';
+
+  @override
+  String get data => 'Data';
+
+  @override
+  String get flow => 'Flow';
+
+  @override
+  String get growth => 'Growth';
+
+  @override
+  String get keyInfluencers => 'Key Influencers';
+
+  @override
+  String get moodTrends => 'Mood Trends';
+
+  @override
+  String get distribution => 'Distribution';
+
+  @override
+  String get monthlyHighlights => 'Monthly Highlights';
 }

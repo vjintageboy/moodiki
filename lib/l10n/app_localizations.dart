@@ -2275,6 +2275,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inspiration for a new day'**
   String get quoteInspirationLabel;
+
+  /// No description provided for @moodAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Analytics'**
+  String get moodAnalyticsTitle;
+
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get week;
+
+  /// No description provided for @month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get month;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get year;
+
+  /// No description provided for @averageMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Mood'**
+  String get averageMood;
+
+  /// No description provided for @totalEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Entries'**
+  String get totalEntries;
+
+  /// No description provided for @moodTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Trend'**
+  String get moodTrend;
+
+  /// No description provided for @moodDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Distribution'**
+  String get moodDistribution;
+
+  /// No description provided for @topInfluencingFactors.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Influencing Factors'**
+  String get topInfluencingFactors;
+
+  /// No description provided for @highlights.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get highlights;
+
+  /// No description provided for @bestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Day'**
+  String get bestDay;
+
+  /// No description provided for @needsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Attention'**
+  String get needsAttention;
+
+  /// No description provided for @noDataThisPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No data for this period'**
+  String get noDataThisPeriod;
+
+  /// No description provided for @startLoggingMoodAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Start logging your mood to see analytics'**
+  String get startLoggingMoodAnalytics;
+
+  /// No description provided for @errorLoadingMoodData.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading mood data: {error}'**
+  String errorLoadingMoodData(String error);
+
+  /// No description provided for @noDataToDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'No data to display'**
+  String get noDataToDisplay;
+
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get data;
+
+  /// No description provided for @flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Flow'**
+  String get flow;
+
+  /// No description provided for @growth.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth'**
+  String get growth;
+
+  /// No description provided for @keyInfluencers.
+  ///
+  /// In en, this message translates to:
+  /// **'Key Influencers'**
+  String get keyInfluencers;
+
+  /// No description provided for @moodTrends.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Trends'**
+  String get moodTrends;
+
+  /// No description provided for @distribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribution'**
+  String get distribution;
+
+  /// No description provided for @monthlyHighlights.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Highlights'**
+  String get monthlyHighlights;
 }
 
 class _AppLocalizationsDelegate

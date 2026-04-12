@@ -531,5 +531,35 @@
   "notesToday": "Ghi chú hôm nay",
   "notesPlaceholder": "Hôm nay của bạn có gì đặc biệt không?...",
   "dailyInspirationQuote": "\"Mỗi ngày là một khởi đầu mới. Hãy hít một hơi thật sâu và mỉm cười với thế giới.\"",
-  "quoteInspirationLabel": "Cảm hứng cho ngày mới"
+  "quoteInspirationLabel": "Cảm hứng cho ngày mới",
+
+  "moodAnalyticsTitle": "Phân tích tâm trạng",
+  "week": "Tuần",
+  "month": "Tháng",
+  "year": "Năm",
+  "averageMood": "Tâm trạng trung bình",
+  "totalEntries": "Tổng số ghi nhận",
+  "moodTrend": "Xu hướng tâm trạng",
+  "moodDistribution": "Phân bố tâm trạng",
+  "topInfluencingFactors": "Các yếu tố ảnh hưởng hàng đầu",
+  "highlights": "Nổi bật",
+  "bestDay": "Ngày tốt nhất",
+  "needsAttention": "Cần chú ý",
+  "noDataThisPeriod": "Không có dữ liệu trong khoảng thời gian này",
+  "startLoggingMoodAnalytics": "Bắt đầu ghi nhận tâm trạng để xem phân tích",
+  "errorLoadingMoodData": "Lỗi tải dữ liệu tâm trạng: {error}",
+  "@errorLoadingMoodData": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noDataToDisplay": "Không có dữ liệu để hiển thị",
+  "data": "Dữ liệu",
+  "flow": "Dòng chảy",
+  "growth": "Tăng trưởng",
+  "currentStreak": "Chuỗi hiện tại",
+  "keyInfluencers": "Yếu tố ảnh hưởng chính",
+  "moodTrends": "Xu hướng tâm trạng",
+  "distribution": "Phân bố",
+  "monthlyHighlights": "Nổi bật tháng này"
 }

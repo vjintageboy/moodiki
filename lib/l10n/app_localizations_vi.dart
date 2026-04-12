@@ -1135,4 +1135,76 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get quoteInspirationLabel => 'Cảm hứng cho ngày mới';
+
+  @override
+  String get moodAnalyticsTitle => 'Phân tích tâm trạng';
+
+  @override
+  String get week => 'Tuần';
+
+  @override
+  String get month => 'Tháng';
+
+  @override
+  String get year => 'Năm';
+
+  @override
+  String get averageMood => 'Tâm trạng trung bình';
+
+  @override
+  String get totalEntries => 'Tổng số ghi nhận';
+
+  @override
+  String get moodTrend => 'Xu hướng tâm trạng';
+
+  @override
+  String get moodDistribution => 'Phân bố tâm trạng';
+
+  @override
+  String get topInfluencingFactors => 'Các yếu tố ảnh hưởng hàng đầu';
+
+  @override
+  String get highlights => 'Nổi bật';
+
+  @override
+  String get bestDay => 'Ngày tốt nhất';
+
+  @override
+  String get needsAttention => 'Cần chú ý';
+
+  @override
+  String get noDataThisPeriod => 'Không có dữ liệu trong khoảng thời gian này';
+
+  @override
+  String get startLoggingMoodAnalytics =>
+      'Bắt đầu ghi nhận tâm trạng để xem phân tích';
+
+  @override
+  String errorLoadingMoodData(String error) {
+    return 'Lỗi tải dữ liệu tâm trạng: $error';
+  }
+
+  @override
+  String get noDataToDisplay => 'Không có dữ liệu để hiển thị';
+
+  @override
+  String get data => 'Dữ liệu';
+
+  @override
+  String get flow => 'Dòng chảy';
+
+  @override
+  String get growth => 'Tăng trưởng';
+
+  @override
+  String get keyInfluencers => 'Yếu tố ảnh hưởng chính';
+
+  @override
+  String get moodTrends => 'Xu hướng tâm trạng';
+
+  @override
+  String get distribution => 'Phân bố';
+
+  @override
+  String get monthlyHighlights => 'Nổi bật tháng này';
 }
