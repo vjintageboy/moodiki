@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../main.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/services/localization_service.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
@@ -24,7 +26,6 @@ class _WelcomePageState extends State<WelcomePage>
   late AnimationController _slideController;
 
   late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
   late Animation<Offset> _slideAnimation;
 
   @override
@@ -41,14 +42,12 @@ class _WelcomePageState extends State<WelcomePage>
       end: 1.0,
     ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
-    // Scale animation
+    // Scale animation (controller kept for dispose, animation removed)
     _scaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     );
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
-    );
+    _scaleController.forward();
 
     // Slide animation
     _slideController = AnimationController(
@@ -262,116 +261,105 @@ class _WelcomePageState extends State<WelcomePage>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.osSurface,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 48),
 
-                // Animated Logo/Brand (long-press to show onboarding in debug builds)
+                // Logo + MOODIKI wordmark on the same row
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Hero(
-                      tag: 'app_logo',
-                      child: GestureDetector(
-                        onLongPress: () {
-                          if (kDebugMode) {
-                            _navigateToPage(const OnboardingPage());
-                          }
-                        },
-                        child: Container(
-                          width: size.width * 0.4,
-                          height: size.width * 0.4,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 40,
-                                offset: const Offset(0, 20),
-                                spreadRadius: 0,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Small logo
+                      Hero(
+                        tag: 'app_logo',
+                        child: GestureDetector(
+                          onLongPress: () {
+                            if (kDebugMode) {
+                              _navigateToPage(const OnboardingPage());
+                            }
+                          },
+                          child: Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.osOnSurface.withValues(alpha: 0.06),
+                                  blurRadius: 32,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                fit: BoxFit.cover,
                               ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(28),
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      // MOODIKI wordmark
+                      ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [AppColors.osPrimary, AppColors.osPrimaryDim],
+                        ).createShader(bounds),
+                        child: Text(
+                          'MOODIKI',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.6,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
                 const SizedBox(height: 32),
 
-                // App Name
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: const Text(
-                    'MOODIKI',
-                    style: TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 38,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2,
-                      height: 1,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
                 // Tagline
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    'Track your emotions, elevate your mindset',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
-                      height: 1.5,
+                    'Track your emotions,\nelevate your mindset',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppColors.osOnSurface,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                      height: 1.25,
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 12),
 
-                // Sub-tagline
+                // Sub-description
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey[300]!, width: 1),
-                    ),
-                    child: Text(
-                      context.l10n.welcomeTagline,
-                      style: TextStyle(
-                        color: Colors.grey[700],
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
+                  child: Text(
+                    'Nền tảng chăm sóc sức khỏe tinh thần toàn diện.',
+                    style: GoogleFonts.manrope(
+                      color: AppColors.osOnSurfaceVariant,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      height: 1.5,
                     ),
                   ),
                 ),
@@ -382,17 +370,18 @@ class _WelcomePageState extends State<WelcomePage>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _FeatureItem(
                         icon: Icons.psychology_outlined,
                         text: context.l10n.aiPoweredInsights,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
                       _FeatureItem(
                         icon: Icons.trending_up,
                         text: context.l10n.trackProgress,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
                       _FeatureItem(
                         icon: Icons.shield_outlined,
                         text: context.l10n.privateSecure,
@@ -401,7 +390,7 @@ class _WelcomePageState extends State<WelcomePage>
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
 
                 // Animated Buttons
                 SlideTransition(
@@ -436,16 +425,17 @@ class _WelcomePageState extends State<WelcomePage>
                               const Icon(
                                 Icons.medical_services_outlined,
                                 size: 18,
-                                color: Color(0xFF4CAF50),
+                                color: AppColors.osPrimary,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 'Join as Mental Health Expert',
-                                style: TextStyle(
-                                  color: Colors.grey[800],
+                                style: GoogleFonts.manrope(
+                                  color: AppColors.osOnSurfaceVariant,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   decoration: TextDecoration.underline,
+                                  decorationColor: AppColors.osOnSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -459,17 +449,18 @@ class _WelcomePageState extends State<WelcomePage>
                         Text.rich(
                           TextSpan(
                             text: context.l10n.termsAgreement,
-                            style: TextStyle(
-                              color: Colors.grey[600],
+                            style: GoogleFonts.manrope(
+                              color: AppColors.osOnSurfaceVariant,
                               fontSize: 12,
                             ),
                             children: [
                               TextSpan(
                                 text: context.l10n.termsPrivacy,
-                                style: TextStyle(
-                                  color: Colors.grey[800],
+                                style: GoogleFonts.manrope(
+                                  color: AppColors.osOnSurface,
                                   fontWeight: FontWeight.w600,
                                   decoration: TextDecoration.underline,
+                                  decorationColor: AppColors.osOnSurface,
                                 ),
                               ),
                             ],
@@ -503,22 +494,22 @@ class _FeatureItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Container(
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(10),
+            color: AppColors.osPrimaryContainer,
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: Colors.white, size: 20),
+          child: Icon(icon, color: AppColors.osPrimary, size: 20),
         ),
         const SizedBox(width: 12),
         Text(
           text,
-          style: TextStyle(
-            color: Colors.grey[800],
+          style: GoogleFonts.manrope(
+            color: AppColors.osOnSurface,
             fontSize: 15,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
@@ -595,15 +586,25 @@ class _PrimaryButtonState extends State<_PrimaryButton>
           width: double.infinity,
           height: 60,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: _isPressed
+                  ? [
+                      AppColors.osPrimaryDim,
+                      AppColors.osPrimaryDim,
+                    ]
+                  : [
+                      AppColors.osPrimary,
+                      AppColors.osPrimaryDim,
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(999),
             boxShadow: _isPressed
                 ? []
                 : [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: AppColors.osOnSurface.withValues(alpha: 0.06),
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
                     ),
                   ],
           ),
@@ -611,15 +612,15 @@ class _PrimaryButtonState extends State<_PrimaryButton>
             color: Colors.transparent,
             child: InkWell(
               onTap: widget.onPressed,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(999),
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       widget.text,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: GoogleFonts.manrope(
+                        color: AppColors.osOnPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.3,
@@ -628,7 +629,7 @@ class _PrimaryButtonState extends State<_PrimaryButton>
                     const SizedBox(width: 8),
                     const Icon(
                       Icons.arrow_forward,
-                      color: Colors.white,
+                      color: AppColors.osOnPrimary,
                       size: 20,
                     ),
                   ],
@@ -708,32 +709,21 @@ class _SecondaryButtonState extends State<_SecondaryButton>
           width: double.infinity,
           height: 60,
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              color: _isPressed ? const Color(0xFF1A1A1A) : Colors.grey[300]!,
-              width: 1.5,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: _isPressed
-                ? []
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+            color: _isPressed
+                ? AppColors.osSurfaceContainerHigh
+                : AppColors.osPrimaryContainer,
+            borderRadius: BorderRadius.circular(999),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: widget.onPressed,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(999),
               child: Center(
                 child: Text(
                   widget.text,
-                  style: const TextStyle(
-                    color: Color(0xFF1A1A1A),
+                  style: GoogleFonts.manrope(
+                    color: AppColors.osOnPrimaryContainer,
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,

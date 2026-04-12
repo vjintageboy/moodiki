@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 
 class ModernTextField extends StatelessWidget {
@@ -30,10 +31,10 @@ class ModernTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: GoogleFonts.manrope(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: AppColors.osOnSurfaceVariant,
             letterSpacing: 0.2,
           ),
         ),
@@ -42,57 +43,58 @@ class ModernTextField extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          style: const TextStyle(
-            fontSize: 16,
+          style: GoogleFonts.manrope(
+            fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: AppColors.osOnSurface,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(
-              color: AppColors.textHint,
+            hintStyle: GoogleFonts.manrope(
+              color: AppColors.osOnSurfaceVariant.withValues(alpha: 0.5),
               fontWeight: FontWeight.w400,
             ),
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 16, right: 12),
-              child: Icon(icon, color: AppColors.textSecondary, size: 22),
+              child: Icon(icon, color: AppColors.osOnSurfaceVariant, size: 20),
             ),
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: AppColors.backgroundGrey,
+            fillColor: AppColors.osSurfaceContainerLow,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: AppColors.borderLight,
-                width: 1.5,
-              ),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: AppColors.borderLight,
-                width: 1.5,
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: AppColors.osOutlineVariant.withValues(alpha: 0.15),
+                width: 1,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.osPrimary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: AppColors.osError.withValues(alpha: 0.6),
+                width: 1.5,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.osError, width: 2),
             ),
-            errorStyle: const TextStyle(
-              fontSize: 13,
+            errorStyle: GoogleFonts.manrope(
+              fontSize: 12,
               fontWeight: FontWeight.w500,
+              color: AppColors.osError,
             ),
           ),
           validator: validator,

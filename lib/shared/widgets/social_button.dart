@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 
 class SocialButton extends StatelessWidget {
@@ -16,27 +17,27 @@ class SocialButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 48,
+      height: 52,
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.borderMedium, width: 1.5),
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.osSurfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: AppColors.primary, size: 24),
+              Icon(icon, color: AppColors.osPrimary, size: 24),
               const SizedBox(width: 8),
               Text(
                 label,
-                style: const TextStyle(
+                style: GoogleFonts.manrope(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+                  color: AppColors.osOnSurface,
                 ),
               ),
             ],

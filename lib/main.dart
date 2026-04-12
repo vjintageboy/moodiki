@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -211,13 +213,13 @@ class _OnboardingPageState extends State<OnboardingPage>
               children: [
                 const SplashScreen(),
                 QuoteScreen(
-                  backgroundColor: AppColors.quoteBackground1,
+                  isLightVariant: true,
                   quote:
                       '"Giữa mùa đông giá lạnh, tôi nhận ra bên trong mình vẫn có một mùa hè bất khuất."',
                   author: 'ALBERT CAMUS',
                 ),
                 QuoteScreen(
-                  backgroundColor: AppColors.quoteBackground2,
+                  isLightVariant: false,
                   quote:
                       '"Cảm xúc chỉ là những vị khách. Hãy để chúng đến rồi đi."',
                   author: 'MOOJI',
@@ -265,7 +267,7 @@ class _PageIndicators extends StatelessWidget {
           width: isActive ? 24 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: isActive ? AppColors.white : AppColors.white70,
+            color: isActive ? AppColors.osPrimary : AppColors.osPrimaryContainer,
             borderRadius: BorderRadius.circular(4),
           ),
         );
@@ -284,25 +286,24 @@ class _SkipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.white70, width: 1),
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.osSurfaceContainerLow,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: AppColors.osOutlineVariant.withValues(alpha: 0.3),
+            width: 1,
           ),
-          child: const Text(
-            'Bỏ qua',
-            style: TextStyle(
-              color: AppColors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+        ),
+        child: Text(
+          'Bỏ qua',
+          style: GoogleFonts.manrope(
+            color: AppColors.osOnSurface,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -359,7 +360,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Container(
-      color: AppColors.splashBackground,
+      color: AppColors.osSurface,
       child: SafeArea(
         bottom: false,
         child: Center(
@@ -382,9 +383,9 @@ class _SplashScreenState extends State<SplashScreen>
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryPurple.withValues(alpha: 0.2),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                color: AppColors.osOnSurface.withValues(alpha: 0.06),
+                                blurRadius: 32,
+                                offset: const Offset(0, 12),
                               ),
                             ],
                           ),
@@ -396,15 +397,15 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                       const SizedBox(height: 32),
                       ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
+                        shaderCallback: (bounds) => const LinearGradient(
                           colors: [
-                            AppColors.primaryPurple,
-                            AppColors.primaryPurple.withValues(alpha: 0.8),
+                            AppColors.osPrimary,
+                            AppColors.osPrimaryDim,
                           ],
                         ).createShader(bounds),
-                        child: const Text(
+                        child: Text(
                           'MOODIKI',
-                          style: TextStyle(
+                          style: GoogleFonts.plusJakartaSans(
                             color: Colors.white,
                             fontSize: 32,
                             fontWeight: FontWeight.w800,
@@ -415,8 +416,8 @@ class _SplashScreenState extends State<SplashScreen>
                       const SizedBox(height: 8),
                       Text(
                         'Hành trình chăm sóc cảm xúc',
-                        style: TextStyle(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.6),
+                        style: GoogleFonts.manrope(
+                          color: AppColors.osOnSurfaceVariant,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.5,
@@ -438,13 +439,13 @@ class _SplashScreenState extends State<SplashScreen>
 // QUOTE SCREEN
 // ============================================================================
 class QuoteScreen extends StatefulWidget {
-  final Color backgroundColor;
+  final bool isLightVariant;
   final String quote;
   final String author;
 
   const QuoteScreen({
     super.key,
-    required this.backgroundColor,
+    required this.isLightVariant,
     required this.quote,
     required this.author,
   });
@@ -489,17 +490,10 @@ class _QuoteScreenState extends State<QuoteScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final quoteTextColor = AppColors.osOnSurface;
+    final authorTextColor = AppColors.osOnPrimaryContainer;
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            widget.backgroundColor,
-            widget.backgroundColor.withValues(alpha: 0.8),
-          ],
-        ),
-      ),
+      color: AppColors.osSurface,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -511,27 +505,24 @@ class _QuoteScreenState extends State<QuoteScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Hero(
-                tag: 'app_logo',
-                child: Container(
-                  width: AppConstants.quoteLogoSize,
-                  height: AppConstants.quoteLogoSize,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: AppColors.white.withValues(alpha: 0.2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+              // Logo with glassmorphism container
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    width: AppConstants.quoteLogoSize,
+                    height: AppConstants.quoteLogoSize,
+                    decoration: BoxDecoration(
+                      color: AppColors.osSurfaceBright.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Hero(
+                      tag: 'app_logo',
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.contain,
                       ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
@@ -548,49 +539,41 @@ class _QuoteScreenState extends State<QuoteScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Larger, more readable quote text with subtle shadow for contrast
                           Text(
                             widget.quote,
-                            style: TextStyle(
-                              color: AppColors.white,
+                            style: GoogleFonts.plusJakartaSans(
+                              color: quoteTextColor,
                               fontSize: size.width * 0.09,
                               height: 1.6,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.6,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  offset: const Offset(0, 3),
-                                  blurRadius: 6,
-                                ),
-                              ],
                             ),
                           ),
                           const SizedBox(height: 24),
-                          // Author pill: increased padding and contrast
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.white.withValues(alpha: 0.28),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.06),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
+                          // Author pill: glassmorphism, no solid border
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
                                 ),
-                              ],
-                            ),
-                            child: Text(
-                              '— ${widget.author}',
-                              style: const TextStyle(
-                                color: AppColors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.6,
+                                decoration: BoxDecoration(
+                                  color: AppColors.osPrimaryContainer
+                                      .withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '— ${widget.author}',
+                                  style: GoogleFonts.manrope(
+                                    color: authorTextColor,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.6,
+                                  ),
+                                ),
                               ),
                             ),
                           ),

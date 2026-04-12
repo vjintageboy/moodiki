@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'signup_page.dart';
@@ -179,13 +180,16 @@ class _LoginPageState extends State<LoginPage>
               child: Center(
                 child: SingleChildScrollView(
                   child: AlertDialog(
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.osSurface,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                    title: const Text(
+                    title: Text(
                       'Đặt lại mật khẩu',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.osOnSurface,
+                      ),
                     ),
                     content: Form(
                       key: dialogFormKey,
@@ -193,9 +197,12 @@ class _LoginPageState extends State<LoginPage>
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Nhập email để nhận liên kết đặt lại mật khẩu.',
-                            style: TextStyle(fontSize: 14),
+                            style: GoogleFonts.manrope(
+                              fontSize: 14,
+                              color: AppColors.osOnSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           ModernTextField(
@@ -230,19 +237,24 @@ class _LoginPageState extends State<LoginPage>
                           Navigator.of(dialogContext).pop();
                         },
                         style: TextButton.styleFrom(
-                          foregroundColor: AppColors.textSecondary,
+                          foregroundColor: AppColors.osOnSurfaceVariant,
                         ),
-                        child: const Text('Hủy'),
+                        child: Text(
+                          'Hủy',
+                          style: GoogleFonts.manrope(fontWeight: FontWeight.w600),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed: isSubmitting ? null : submitRequest,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: AppColors.osPrimary,
+                          foregroundColor: AppColors.osOnPrimary,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(999),
                           ),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
+                            horizontal: 20,
                             vertical: 12,
                           ),
                         ),
@@ -252,14 +264,14 @@ class _LoginPageState extends State<LoginPage>
                                 height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: AppColors.osOnPrimary,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Gửi yêu cầu',
-                                style: TextStyle(
+                                style: GoogleFonts.manrope(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: AppColors.osOnPrimary,
                                 ),
                               ),
                       ),
@@ -277,7 +289,7 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.osSurface,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -289,62 +301,99 @@ class _LoginPageState extends State<LoginPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+
                     // Back button
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.grey[100],
-                        padding: const EdgeInsets.all(12),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Logo/Brand Area
                     Container(
-                      width: 56,
-                      height: 56,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+                        color: AppColors.osSurfaceContainerLow,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          fit: BoxFit.cover,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => Navigator.pop(context),
+                          borderRadius: BorderRadius.circular(14),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: AppColors.osOnSurface,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+
+                    const SizedBox(height: 28),
+
+                    // Logo + brand row
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.osOnSurface.withValues(alpha: 0.06),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        ShaderMask(
+                          shaderCallback: (bounds) => const LinearGradient(
+                            colors: [AppColors.osPrimary, AppColors.osPrimaryDim],
+                          ).createShader(bounds),
+                          child: Text(
+                            'MOODIKI',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 28),
+
                     // Title
                     Text(
                       context.l10n.signInToModiki,
-                      style: const TextStyle(
-                        fontSize: 32,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A1A),
-                        letterSpacing: -1.5,
-                        height: 1.1,
+                        color: AppColors.osOnSurface,
+                        letterSpacing: -0.5,
+                        height: 1.15,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       context.l10n.signInToContinue,
-                      style: TextStyle(
+                      style: GoogleFonts.manrope(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: AppColors.osOnSurfaceVariant,
                         fontWeight: FontWeight.w400,
-                        letterSpacing: 0.2,
                       ),
                     ),
+
                     const SizedBox(height: 32),
+
                     // Email field
                     ModernTextField(
                       controller: _emailController,
@@ -362,7 +411,9 @@ class _LoginPageState extends State<LoginPage>
                         return null;
                       },
                     ),
+
                     const SizedBox(height: 16),
+
                     // Password field
                     ModernTextField(
                       controller: _passwordController,
@@ -375,13 +426,11 @@ class _LoginPageState extends State<LoginPage>
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: AppColors.textSecondary,
-                          size: 22,
+                          color: AppColors.osOnSurfaceVariant,
+                          size: 20,
                         ),
                         onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
+                          setState(() => _obscurePassword = !_obscurePassword);
                         },
                       ),
                       validator: (value) {
@@ -394,7 +443,9 @@ class _LoginPageState extends State<LoginPage>
                         return null;
                       },
                     ),
-                    const SizedBox(height: 12),
+
+                    const SizedBox(height: 8),
+
                     // Forgot password
                     Align(
                       alignment: Alignment.centerRight,
@@ -402,21 +453,23 @@ class _LoginPageState extends State<LoginPage>
                         onPressed: _showForgotPasswordDialog,
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
+                            horizontal: 4,
                             vertical: 4,
                           ),
                         ),
                         child: Text(
                           context.l10n.forgotPassword,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: GoogleFonts.manrope(
+                            color: AppColors.osPrimary,
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
+
                     // Login button
                     Consumer<AuthProvider>(
                       builder: (context, authProvider, child) {
@@ -428,37 +481,23 @@ class _LoginPageState extends State<LoginPage>
                         );
                       },
                     ),
-                    const SizedBox(height: 16),
-                    // Divider
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Divider(
-                            color: AppColors.borderMedium,
-                            thickness: 1,
-                          ),
+
+                    const SizedBox(height: 24),
+
+                    // "Or continue with" — no divider lines, just spaced text
+                    Center(
+                      child: Text(
+                        context.l10n.orContinueWith,
+                        style: GoogleFonts.manrope(
+                          color: AppColors.osOnSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            context.l10n.orContinueWith,
-                            style: TextStyle(
-                              color: AppColors.textSecondary.withValues(alpha: 0.8),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                        const Expanded(
-                          child: Divider(
-                            color: AppColors.borderMedium,
-                            thickness: 1,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
+
                     const SizedBox(height: 16),
+
                     // Social login buttons
                     Row(
                       children: [
@@ -466,24 +505,22 @@ class _LoginPageState extends State<LoginPage>
                           child: SocialButton(
                             icon: Icons.g_mobiledata,
                             label: 'Google',
-                            onPressed: () {
-                              // TODO: Implement Google sign in
-                            },
+                            onPressed: () {},
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: SocialButton(
                             icon: Icons.apple,
                             label: 'Apple',
-                            onPressed: () {
-                              // TODO: Implement Apple sign in
-                            },
+                            onPressed: () {},
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+
+                    const SizedBox(height: 32),
+
                     // Sign up link
                     Center(
                       child: Row(
@@ -491,9 +528,9 @@ class _LoginPageState extends State<LoginPage>
                         children: [
                           Text(
                             context.l10n.dontHaveAccount,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 15,
+                            style: GoogleFonts.manrope(
+                              color: AppColors.osOnSurfaceVariant,
+                              fontSize: 14,
                             ),
                           ),
                           TextButton(
@@ -506,25 +543,24 @@ class _LoginPageState extends State<LoginPage>
                               );
                             },
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                             child: Text(
                               context.l10n.signUp,
-                              style: const TextStyle(
-                                color: AppColors.primary,
+                              style: GoogleFonts.manrope(
+                                color: AppColors.osPrimary,
                                 fontWeight: FontWeight.w700,
-                                fontSize: 15,
+                                fontSize: 14,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
