@@ -1,8 +1,8 @@
 import '../../services/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../core/services/localization_service.dart';
 import '../../models/streak.dart';
-import 'streak_debug_page.dart';
 
 class StreakHistoryPage extends StatefulWidget {
   const StreakHistoryPage({super.key});
@@ -63,29 +63,15 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Streak History',
-          style: TextStyle(
+        title: Text(
+          context.l10n.streakHistoryTitle,
+          style: const TextStyle(
             color: Colors.black,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
-        actions: [
-          // Debug tools button
-          IconButton(
-            icon: const Icon(Icons.bug_report, color: Colors.grey),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StreakDebugPage(),
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(
@@ -112,6 +98,7 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
   }
 
   Widget _buildStreakStats() {
+    final l10n = context.l10n;
     final currentStreak = _streak?.currentStreak ?? 0;
     final longestStreak = _streak?.longestStreak ?? 0;
     final totalActivities = _streak?.totalActivities ?? 0;
@@ -142,8 +129,8 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                 child: _buildStatItem(
                   '🔥',
                   '$currentStreak',
-                  'Current Streak',
-                  'days',
+                  l10n.currentStreak,
+                  l10n.daysUnit,
                 ),
               ),
               Container(
@@ -155,8 +142,8 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                 child: _buildStatItem(
                   '🏆',
                   '$longestStreak',
-                  'Longest Streak',
-                  'days',
+                  l10n.longestStreak,
+                  l10n.daysUnit,
                 ),
               ),
             ],
@@ -178,7 +165,7 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '$totalActivities total activities',
+                  l10n.totalActivities(totalActivities),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -207,8 +194,8 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                 Expanded(
                   child: Text(
                     currentStreak > 0
-                        ? 'Keep it up! Come back tomorrow'
-                        : 'Start your streak today!',
+                        ? l10n.keepItUp
+                        : l10n.startYourStreak,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
@@ -463,6 +450,7 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
   }
 
   Widget _buildLegend() {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -472,18 +460,18 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Legend',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          Text(
+            l10n.legend,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
-          Row(
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
             children: [
-              _buildLegendItem(const Color(0xFF4CAF50), 'Activity'),
-              const SizedBox(width: 16),
-              _buildLegendItem(Colors.grey.shade200, 'No Activity'),
-              const SizedBox(width: 16),
-              _buildLegendItem(Colors.grey.shade100, 'Future'),
+              _buildLegendItem(const Color(0xFF4CAF50), l10n.hasActivity),
+              _buildLegendItem(Colors.grey.shade200, l10n.noActivity),
+              _buildLegendItem(Colors.grey.shade100, l10n.future),
             ],
           ),
         ],
@@ -513,6 +501,7 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
   }
 
   Widget _buildStreakTips() {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
@@ -545,17 +534,17 @@ class _StreakHistoryPageState extends State<StreakHistoryPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Tips to Maintain Streak',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              Text(
+                l10n.streakTips,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildTipItem('Log your mood daily to build consistency'),
-          _buildTipItem('Complete meditation sessions regularly'),
-          _buildTipItem('Set daily reminders to check in with yourself'),
-          _buildTipItem('Streak resets if you miss a day'),
+          _buildTipItem(l10n.tipDailyMood),
+          _buildTipItem(l10n.tipMeditation),
+          _buildTipItem(l10n.tipDailyReminder),
+          _buildTipItem(l10n.tipStreakReset),
         ],
       ),
     );

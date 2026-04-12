@@ -497,5 +497,25 @@
   "totalLogs": "Tổng cộng",
   "logsUnit": "lần",
   "daysUnit": "ngày",
-  "logMood": "Ghi lại"
+  "logMood": "Ghi lại",
+
+  "streakHistoryTitle": "Lịch Sử Chuỗi",
+  "totalActivities": "Tổng {count} hoạt động",
+  "@totalActivities": {
+    "description": "Tổng số hoạt động trong thống kê chuỗi",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "keepItUp": "Phát huy nhé! Quay lại vào ngày mai",
+  "startYourStreak": "Bắt đầu chuỗi của bạn hôm nay!",
+  "legend": "Chú giải",
+  "hasActivity": "Có hoạt động",
+  "noActivity": "Không hoạt động",
+  "future": "Tương lai",
+  "streakTips": "Mẹo Duy Trì Chuỗi",
+  "tipDailyMood": "Ghi nhận tâm trạng hàng ngày để xây dựng thói quen",
+  "tipMeditation": "Hoàn thành các buổi thiền định thường xuyên",
+  "tipDailyReminder": "Đặt nhắc nhở hàng ngày để tự kiểm tra",
+  "tipStreakReset": "Chuỗi sẽ reset nếu bạn bỏ lỡ một ngày"
 }

@@ -2125,6 +2125,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log mood'**
   String get logMood;
+
+  /// No description provided for @streakHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak History'**
+  String get streakHistoryTitle;
+
+  /// Total activities count in streak stats
+  ///
+  /// In en, this message translates to:
+  /// **'{count} total activities'**
+  String totalActivities(int count);
+
+  /// No description provided for @keepItUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it up! Come back tomorrow'**
+  String get keepItUp;
+
+  /// No description provided for @startYourStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your streak today!'**
+  String get startYourStreak;
+
+  /// No description provided for @hasActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get hasActivity;
+
+  /// No description provided for @noActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No Activity'**
+  String get noActivity;
+
+  /// No description provided for @future.
+  ///
+  /// In en, this message translates to:
+  /// **'Future'**
+  String get future;
+
+  /// No description provided for @streakTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips to Maintain Streak'**
+  String get streakTips;
+
+  /// No description provided for @tipDailyMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your mood daily to build consistency'**
+  String get tipDailyMood;
+
+  /// No description provided for @tipMeditation.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete meditation sessions regularly'**
+  String get tipMeditation;
+
+  /// No description provided for @tipDailyReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Set daily reminders to check in with yourself'**
+  String get tipDailyReminder;
+
+  /// No description provided for @tipStreakReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak resets if you miss a day'**
+  String get tipStreakReset;
 }
 
 class _AppLocalizationsDelegate

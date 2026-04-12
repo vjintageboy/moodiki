@@ -1048,4 +1048,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logMood => 'Log mood';
+
+  @override
+  String get streakHistoryTitle => 'Streak History';
+
+  @override
+  String totalActivities(int count) {
+    return '$count total activities';
+  }
+
+  @override
+  String get keepItUp => 'Keep it up! Come back tomorrow';
+
+  @override
+  String get startYourStreak => 'Start your streak today!';
+
+  @override
+  String get hasActivity => 'Activity';
+
+  @override
+  String get noActivity => 'No Activity';
+
+  @override
+  String get future => 'Future';
+
+  @override
+  String get streakTips => 'Tips to Maintain Streak';
+
+  @override
+  String get tipDailyMood => 'Log your mood daily to build consistency';
+
+  @override
+  String get tipMeditation => 'Complete meditation sessions regularly';
+
+  @override
+  String get tipDailyReminder =>
+      'Set daily reminders to check in with yourself';
+
+  @override
+  String get tipStreakReset => 'Streak resets if you miss a day';
 }

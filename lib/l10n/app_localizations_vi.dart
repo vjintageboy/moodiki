@@ -1055,4 +1055,43 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get logMood => 'Ghi lại';
+
+  @override
+  String get streakHistoryTitle => 'Lịch Sử Chuỗi';
+
+  @override
+  String totalActivities(int count) {
+    return 'Tổng $count hoạt động';
+  }
+
+  @override
+  String get keepItUp => 'Phát huy nhé! Quay lại vào ngày mai';
+
+  @override
+  String get startYourStreak => 'Bắt đầu chuỗi của bạn hôm nay!';
+
+  @override
+  String get hasActivity => 'Có hoạt động';
+
+  @override
+  String get noActivity => 'Không hoạt động';
+
+  @override
+  String get future => 'Tương lai';
+
+  @override
+  String get streakTips => 'Mẹo Duy Trì Chuỗi';
+
+  @override
+  String get tipDailyMood =>
+      'Ghi nhận tâm trạng hàng ngày để xây dựng thói quen';
+
+  @override
+  String get tipMeditation => 'Hoàn thành các buổi thiền định thường xuyên';
+
+  @override
+  String get tipDailyReminder => 'Đặt nhắc nhở hàng ngày để tự kiểm tra';
+
+  @override
+  String get tipStreakReset => 'Chuỗi sẽ reset nếu bạn bỏ lỡ một ngày';
 }

@@ -497,5 +497,25 @@
   "totalLogs": "Total",
   "logsUnit": "logs",
   "daysUnit": "days",
-  "logMood": "Log mood"
+  "logMood": "Log mood",
+
+  "streakHistoryTitle": "Streak History",
+  "totalActivities": "{count} total activities",
+  "@totalActivities": {
+    "description": "Total activities count in streak stats",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "keepItUp": "Keep it up! Come back tomorrow",
+  "startYourStreak": "Start your streak today!",
+  "legend": "Legend",
+  "hasActivity": "Activity",
+  "noActivity": "No Activity",
+  "future": "Future",
+  "streakTips": "Tips to Maintain Streak",
+  "tipDailyMood": "Log your mood daily to build consistency",
+  "tipMeditation": "Complete meditation sessions regularly",
+  "tipDailyReminder": "Set daily reminders to check in with yourself",
+  "tipStreakReset": "Streak resets if you miss a day"
 }
