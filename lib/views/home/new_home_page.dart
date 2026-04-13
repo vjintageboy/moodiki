@@ -14,6 +14,7 @@ import '../expert/expert_list_page.dart';
 import '../streak/streak_history_page.dart';
 import '../chatbot/chatbot_page.dart';
 import '../notification/notifications_page.dart';
+import '../chat/chat_list_page.dart';
 import '../mood/mood_history_page.dart';
 import '../meditation/meditation_library_page.dart';
 
@@ -305,6 +306,27 @@ class _NewHomePageState extends State<NewHomePage>
                     ),
                   );
                 },
+              ),
+              const SizedBox(width: 10),
+              // Chat button
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatListPage()),
+                ),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.osSurfaceContainerLow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: AppColors.osPrimary,
+                    size: 20,
+                  ),
+                ),
               ),
             ],
           ),
