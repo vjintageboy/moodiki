@@ -198,7 +198,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         Row(
                           children: [
                             CircleAvatar(
-                              radius: 24,
+                              radius: 20,
                               backgroundColor:
                                   widget.post.authorName == 'Anonymous'
                                   ? Colors.grey.shade300
@@ -221,7 +221,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               child: widget.post.authorName == 'Anonymous'
                                   ? Icon(
                                       Icons.visibility_off,
-                                      size: 24,
+                                      size: 20,
                                       color: Colors.grey.shade700,
                                     )
                                   : (widget.post.authorAvatarUrl == null || widget.post.authorAvatarUrl!.isEmpty
@@ -231,7 +231,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                             style: const TextStyle(
                                               color: AppColors.primaryLight,
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 18,
+                                              fontSize: 16,
                                             ),
                                           )
                                         : null),

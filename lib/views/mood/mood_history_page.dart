@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -36,6 +37,8 @@ class _MoodHistoryPageState extends State<MoodHistoryPage>
   final SupabaseService _supabaseService = SupabaseService.instance;
   List<MoodEntry> _moodEntries = [];
   bool _isLoading = true;
+  bool _hasCompletedInitialFetch = false;
+  StreamSubscription<List<MoodEntry>>? _moodSubscription;
   late TabController _tabController;
   int _currentTabIndex = 0; // source-of-truth for the pill UI (updates immediately on tap)
   int _selectedMoodFilter = 0;
@@ -47,12 +50,39 @@ class _MoodHistoryPageState extends State<MoodHistoryPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadMoodEntries();
+    _subscribeToMoodEntries();
   }
 
   @override
   void dispose() {
+    _moodSubscription?.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _subscribeToMoodEntries() {
+    final user = _supabaseService.currentUser;
+    if (user == null) return;
+
+    _moodSubscription = _supabaseService.streamMoodEntries(user.id).listen(
+      (entries) {
+        if (mounted) {
+          setState(() {
+            _moodEntries = entries;
+            _isLoading = false;
+            _hasCompletedInitialFetch = true;
+          });
+        }
+      },
+      onError: (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasCompletedInitialFetch = true;
+          });
+        }
+      },
+    );
   }
 
   Future<void> _loadMoodEntries() async {
@@ -67,11 +97,15 @@ class _MoodHistoryPageState extends State<MoodHistoryPage>
         setState(() {
           _moodEntries = entries;
           _isLoading = false;
+          _hasCompletedInitialFetch = true;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _hasCompletedInitialFetch = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading mood history: $e')),
         );
@@ -240,7 +274,9 @@ class _MoodHistoryPageState extends State<MoodHistoryPage>
                   context,
                   MaterialPageRoute(builder: (_) => const MoodLogPage()),
                 );
-                if (result == true && mounted) setState(() {});
+                if (result == true && mounted) {
+                  _loadMoodEntries();
+                }
               },
               child: Container(
                 width: 38,

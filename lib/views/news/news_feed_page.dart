@@ -421,9 +421,9 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Main content — left padding 44 to clear avatar
+            // Main content — left padding 40 to clear avatar
             Padding(
-              padding: const EdgeInsets.only(left: 44, right: 16, top: 20, bottom: 0),
+              padding: const EdgeInsets.only(left: 40, right: 16, top: 20, bottom: 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -689,7 +689,7 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
         border: Border.all(color: _kSurface, width: 4),
       ),
       child: CircleAvatar(
-        radius: 24,
+        radius: 20,
         backgroundColor: isAnon ? _kSurfaceContainerHighest : _kPrimaryContainer,
         backgroundImage: !isAnon &&
                 post.authorAvatarUrl != null &&
@@ -700,7 +700,7 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
                 as ImageProvider
             : null,
         child: isAnon
-            ? const Icon(Icons.visibility_off, size: 20, color: _kOnSurfaceVariant)
+            ? const Icon(Icons.visibility_off, size: 18, color: _kOnSurfaceVariant)
             : (post.authorAvatarUrl == null || post.authorAvatarUrl!.isEmpty
                 ? Text(
                     post.authorName[0].toUpperCase(),
