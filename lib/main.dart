@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'l10n/app_localizations.dart';
 import 'views/auth/welcome_page.dart';
+import 'views/home/home_page.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/mood_provider.dart';
 import 'core/providers/chatbot_provider.dart';
@@ -86,14 +87,24 @@ class MyApp extends StatelessWidget {
 }
 
 // ============================================================================
-// AUTH WRAPPER - Temporarily mocked
+// AUTH WRAPPER - Checks auth status and routes accordingly
 // ============================================================================
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Temporarily always show OnboardingPage since Firebase Auth is removed
+    final authProvider = Provider.of<AuthProvider>(context);
+    debugPrint('🔑 AuthWrapper rebuilt with status: ${authProvider.status}');
+
+    // If authenticated, go to home
+    if (authProvider.status == AuthStatus.authenticated) {
+      debugPrint('🏠 Navigating to HomePage');
+      return const HomePage();
+    }
+
+    // Otherwise show onboarding/login
+    debugPrint('📱 Showing OnboardingPage');
     return const OnboardingPage();
   }
 }

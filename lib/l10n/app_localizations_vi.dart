@@ -982,7 +982,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get termsPrivacy => 'Điều khoản & Quyền riêng tư';
 
   @override
-  String get signInToModiki => 'Đăng nhập vào MODIKI';
+  String get signInToModiki => 'Đăng nhập vào MOODIKI';
 
   @override
   String get signInToContinue => 'Đăng nhập để tiếp tục hành trình của bạn';

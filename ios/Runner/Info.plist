@@ -24,8 +24,38 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>googlechromes</string>
+		<string>com.googleusercontent.apps.87883881567-3uma3d2kfiud8krklfm4jsb9098n422n</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.87883881567-3uma3d2kfiud8krklfm4jsb9098n422n</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vn.phenikaa.pha.moodiki</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>87883881567-3uma3d2kfiud8krklfm4jsb9098n422n.apps.googleusercontent.com</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to take profile pictures</string>
 	<key>NSPhotoLibraryUsageDescription</key>

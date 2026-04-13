@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../constants/app_constants.dart';
 import '../../services/supabase_service.dart';
 
@@ -26,18 +28,27 @@ class AuthProvider extends ChangeNotifier {
     // Check initial session
     final session = _supabase.auth.currentSession;
     if (session != null) {
+      debugPrint('🔐 Initial session found');
       _status = AuthStatus.authenticated;
     } else {
+      debugPrint('🔐 No initial session');
       _status = AuthStatus.unauthenticated;
     }
     notifyListeners();
 
     // Listen to auth changes
-    _supabase.auth.onAuthStateChange.listen((data) {
+    _supabase.auth.onAuthStateChange.listen((data) async {
       final AuthChangeEvent event = data.event;
+      final user = data.session?.user;
+      debugPrint('🔐 Auth event: $event');
       if (event == AuthChangeEvent.signedIn) {
+        debugPrint('🔐 → Authenticated');
+        if (user != null) {
+          await _ensureProfile(user);
+        }
         _status = AuthStatus.authenticated;
       } else if (event == AuthChangeEvent.signedOut) {
+        debugPrint('🔐 → Unauthenticated');
         _status = AuthStatus.unauthenticated;
       }
       notifyListeners();
@@ -156,6 +167,132 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = 'Failed to send reset email: ${e.toString()}';
       notifyListeners();
       return false;
+    }
+  }
+
+  static const _kRedirectUrl = 'vn.phenikaa.pha.moodiki://login-callback';
+
+  /// Google sign-in via Supabase browser-based OAuth.
+  /// Opens Safari, user authenticates, redirect back to the app.
+  /// Waits for the signedIn event before returning.
+  Future<bool> signInWithGoogle() async {
+    try {
+      debugPrint('🔵 Google sign-in starting...');
+      _status = AuthStatus.loading;
+      _errorMessage = null;
+      notifyListeners();
+
+      final launched = await _supabase.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: _kRedirectUrl,
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
+
+      debugPrint('🔵 OAuth launched: $launched');
+
+      // Wait for the redirect to complete and user to be signed in
+      final event = await _supabase.auth.onAuthStateChange
+          .firstWhere(
+            (e) => e.event == AuthChangeEvent.signedIn,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (event.event == AuthChangeEvent.signedIn) {
+        debugPrint('🔵 Signed in successfully!');
+        return true;
+      }
+
+      return false;
+    } on TimeoutException {
+      debugPrint('🔵 Timeout waiting for sign-in');
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      debugPrint('🔵 Error: $e');
+      _status = AuthStatus.error;
+      _errorMessage = 'Google sign-in failed: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Apple sign-in using native Sign in with Apple sheet + Supabase ID token.
+  /// No nonce — avoids simulator incompatibilities and Supabase mismatch.
+  Future<bool> signInWithApple() async {
+    try {
+      _status = AuthStatus.loading;
+      _errorMessage = null;
+      notifyListeners();
+
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        _status = AuthStatus.error;
+        _errorMessage = 'Apple sign-in did not return an ID token';
+        notifyListeners();
+        return false;
+      }
+
+      final AuthResponse res = await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+      );
+
+      if (res.user != null) {
+        // Apple only sends name on the very first sign-in
+        String fullName = '';
+        if (credential.givenName != null || credential.familyName != null) {
+          fullName =
+              '${credential.givenName ?? ''} ${credential.familyName ?? ''}'
+                  .trim();
+        }
+        await _ensureProfile(res.user!, overrideName: fullName);
+        _status = AuthStatus.authenticated;
+        notifyListeners();
+        return true;
+      }
+
+      _status = AuthStatus.error;
+      _errorMessage = 'Apple sign-in failed';
+      notifyListeners();
+      return false;
+    } on AuthException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = 'Apple sign-in failed: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Create user profile in `users` table if it doesn't exist yet.
+  Future<void> _ensureProfile(User user, {String? overrideName}) async {
+    try {
+      final existing = await _supabaseService.getUserById(user.id);
+      if (existing == null) {
+        final name = (overrideName != null && overrideName.isNotEmpty)
+            ? overrideName
+            : (user.userMetadata?['full_name'] ?? '');
+        await _supabaseService.createUserProfile(
+          id: user.id,
+          email: user.email ?? '',
+          fullName: name,
+          role: 'user',
+        );
+      }
+    } catch (e) {
+      debugPrint('⚠️ Profile creation after social sign-in failed: $e');
     }
   }
 

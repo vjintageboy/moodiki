@@ -108,6 +108,50 @@ class _LoginPageState extends State<LoginPage>
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (success) {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final profile = await _supabaseService.getUserById(user.id);
+        final role = profile?.role.value ?? 'user';
+
+        if (!mounted) return;
+
+        Widget destinationPage;
+        if (role == 'admin') {
+          destinationPage = const AdminMainPage();
+        } else if (role == 'expert') {
+          destinationPage = const ExpertMainPage();
+        } else {
+          destinationPage = const HomePage();
+        }
+
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => destinationPage),
+          (route) => false,
+        );
+      }
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Google sign-in failed'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
   void _showForgotPasswordDialog() {
     final parentContext = context;
     _forgotPasswordController.text = _emailController.text.trim();
@@ -498,25 +542,11 @@ class _LoginPageState extends State<LoginPage>
 
                     const SizedBox(height: 16),
 
-                    // Social login buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SocialButton(
-                            icon: Icons.g_mobiledata,
-                            label: 'Google',
-                            onPressed: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: SocialButton(
-                            icon: Icons.apple,
-                            label: 'Apple',
-                            onPressed: () {},
-                          ),
-                        ),
-                      ],
+                    // Google login button
+                    SocialButton(
+                      icon: Icons.g_mobiledata,
+                      label: 'Google',
+                      onPressed: _handleGoogleSignIn,
                     ),
 
                     const SizedBox(height: 32),

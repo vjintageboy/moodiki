@@ -977,7 +977,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termsPrivacy => 'Terms & Privacy';
 
   @override
-  String get signInToModiki => 'Sign in to MODIKI';
+  String get signInToModiki => 'Sign in to MOODIKI';
 
   @override
   String get signInToContinue => 'Sign in to continue your journey';

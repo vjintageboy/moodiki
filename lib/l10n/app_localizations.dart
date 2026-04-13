@@ -1985,7 +1985,7 @@ abstract class AppLocalizations {
   /// No description provided for @signInToModiki.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to MODIKI'**
+  /// **'Sign in to MOODIKI'**
   String get signInToModiki;
 
   /// No description provided for @signInToContinue.
