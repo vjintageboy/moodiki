@@ -11,6 +11,7 @@ import '../ai/disclaimer.dart';
 import '../services/appointment_service.dart';
 import '../services/availability_service.dart';
 import '../services/rag_service.dart';
+import '../services/supabase_service.dart';
 
 /// AI Chatbot Service - Xử lý logic chatbot và AI responses
 class AIChatbotService {
@@ -64,8 +65,17 @@ class AIChatbotService {
       tools: [ToolDefinitions.allTools],
     );
 
+    final supabaseService = SupabaseService.instance;
     final dispatcher = ToolDispatcher(
       userId: userId,
+      listExperts: ({String? specialization}) async {
+        final experts = await supabaseService.getApprovedExperts();
+        if (specialization == null || specialization.isEmpty) return experts;
+        return experts.where((e) {
+          final spec = e['specialization']?.toString().toLowerCase() ?? '';
+          return spec.contains(specialization.toLowerCase());
+        }).toList();
+      },
       getAvailability: AvailabilityService().getAvailability,
       getBookedTimeSlots: AppointmentService().getBookedTimeSlots,
       generateTimeSlots: AppointmentService().generateTimeSlots,
@@ -461,7 +471,40 @@ class AIChatbotService {
         user?.id ?? '',
       );
 
-      // Try Gemini streaming
+      // Initialize tool calling if user is authenticated
+      if (user != null && _toolController == null) {
+        debugPrint('[AIChatbot] Initializing function calling for user: ${user.id}');
+        _initializeTools(user.id);
+      }
+
+      // Try function calling path first (non-streaming tool loop, then yield result)
+      if (_toolController != null && _modelWithTools != null) {
+        try {
+          debugPrint('[AIChatbot] Stream: trying function calling path');
+          final chat = _modelWithTools!.startChat(
+            history: _buildGeminiHistory(history.reversed.toList()),
+          );
+          final enhancedMessage = contextMessage.isNotEmpty ? contextMessage : userMessage;
+          final aiText = await _toolController!.execute(
+            userMessage: enhancedMessage,
+            sendMessage: chat.sendMessage,
+          );
+          if (aiText.isNotEmpty) {
+            debugPrint('[AIChatbot] Stream: function calling returned ${aiText.length} chars');
+            final finalResponse = DisclaimerInjector.maybeAdd(
+              aiResponse: aiText,
+              userInput: userMessage,
+            );
+            yield finalResponse;
+            return;
+          }
+        } catch (toolError) {
+          debugPrint('[AIChatbot] Stream: tool calling error: $toolError');
+          // Fall through to streaming path
+        }
+      }
+
+      // Try Gemini streaming (no tools / fallback)
       if (_model != null) {
         try {
           final responseStream = _model!.generateContentStream([

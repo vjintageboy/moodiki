@@ -2,10 +2,20 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 
 class ToolDefinitions {
   static Tool get allTools => Tool(functionDeclarations: [
+        listExperts,
         checkExpertAvailability,
         bookSession,
         generateMonthlyReport,
       ]);
+
+  static final FunctionDeclaration listExperts = FunctionDeclaration(
+    'list_experts',
+    'Lấy danh sách tất cả chuyên gia tâm lý đang hoạt động, kèm tên, chuyên môn, đánh giá và giá tiền. Gọi tool này trước khi gọi check_expert_availability hoặc book_session khi người dùng chưa cung cấp expert_id.',
+    Schema(SchemaType.object, properties: {
+      'specialization': Schema(SchemaType.string,
+          description: 'Lọc theo chuyên môn (tuỳ chọn)', nullable: true),
+    }),
+  );
 
   static final FunctionDeclaration checkExpertAvailability =
       FunctionDeclaration(

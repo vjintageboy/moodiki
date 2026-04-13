@@ -36,6 +36,10 @@ class ToolDispatcher {
     DateTime end,
   ) getMoodEntries;
 
+  /// Returns all approved experts with name, specialization, rating, price.
+  final Future<List<Map<String, dynamic>>> Function({String? specialization})
+      listExperts;
+
   /// Returns the expert row (needs `hourly_rate`), or null if not found.
   final Future<Map<String, dynamic>?> Function(String expertId) getExpertPrice;
 
@@ -57,6 +61,7 @@ class ToolDispatcher {
   static const _userConflictMsg = 'đã có lịch';
 
   const ToolDispatcher({
+    required this.listExperts,
     required this.getAvailability,
     required this.getBookedTimeSlots,
     required this.generateTimeSlots,
@@ -108,12 +113,48 @@ class ToolDispatcher {
     Map<String, Object?> args,
   ) {
     final Future<Map<String, Object?>> future = switch (toolName) {
+      'list_experts' => _listExperts(args),
       'check_expert_availability' => _checkAvailability(args),
       'book_session' => _bookSession(args),
       'generate_monthly_report' => _generateReport(args),
       _ => throw ArgumentError('Unknown tool: $toolName'),
     };
     return future.timeout(const Duration(seconds: 10));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Handler: list_experts
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, Object?>> _listExperts(
+    Map<String, Object?> args,
+  ) async {
+    final specialization = args['specialization'] as String?;
+    final experts = await listExperts(specialization: specialization);
+
+    if (experts.isEmpty) {
+      return {
+        'experts': <Map<String, Object?>>[],
+        'message': 'Hiện tại không có chuyên gia nào hoạt động',
+      };
+    }
+
+    final result = experts.map((e) {
+      final user = e['users'] as Map<String, dynamic>?;
+      return <String, Object?>{
+        'expert_id': e['id']?.toString() ?? '',
+        'name': user?['full_name']?.toString() ?? 'Chuyên gia',
+        'specialization': e['specialization']?.toString() ?? '',
+        'rating': e['rating'],
+        'hourly_rate': e['hourly_rate'],
+        'is_available': e['is_available'] ?? false,
+      };
+    }).toList();
+
+    return {
+      'experts': result,
+      'total': result.length,
+    };
   }
 
   // ---------------------------------------------------------------------------

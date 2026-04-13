@@ -103,9 +103,9 @@ class AuthWrapper extends StatelessWidget {
       return const HomePage();
     }
 
-    // Otherwise show onboarding/login
-    debugPrint('📱 Showing OnboardingPage');
-    return const OnboardingPage();
+    // Otherwise show welcome/login
+    debugPrint('📱 Showing WelcomePage');
+    return const WelcomePage();
   }
 }
 

@@ -18,10 +18,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize or restore last conversation
+    // Always start a new chat session
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatbot = context.read<ChatbotProvider>();
-      chatbot.ensureInitialized();
+      chatbot.startNewConversation();
     });
   }
 
