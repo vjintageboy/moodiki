@@ -614,21 +614,13 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
                             const Icon(Icons.chat_bubble_outline,
                                 color: _kPrimary, size: 20),
                             const SizedBox(width: 6),
-                            StreamBuilder<int>(
-                              stream:
-                                  _newsService.streamCommentCount(post.postId),
-                              builder: (context, snapshot) {
-                                final count =
-                                    snapshot.data ?? post.commentCount;
-                                return Text(
-                                  '$count',
-                                  style: GoogleFonts.manrope(
-                                    color: _kOnSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                );
-                              },
+                            Text(
+                              '${post.commentCount}',
+                              style: GoogleFonts.manrope(
+                                color: _kOnSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
