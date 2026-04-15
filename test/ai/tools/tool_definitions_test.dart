@@ -4,11 +4,11 @@ import 'package:n04_app/ai/tools/tool_definitions.dart';
 
 void main() {
   group('ToolDefinitions', () {
-    // Test 1: allTools contains exactly 3 FunctionDeclarations
-    test('allTools contains exactly 3 FunctionDeclarations', () {
+    // Test 1: allTools contains exactly 4 FunctionDeclarations
+    test('allTools contains exactly 4 FunctionDeclarations', () {
       final tool = ToolDefinitions.allTools;
       expect(tool.functionDeclarations, isNotNull);
-      expect(tool.functionDeclarations!.length, equals(3));
+      expect(tool.functionDeclarations!.length, equals(4));
     });
 
     // Test 2: checkExpertAvailability name

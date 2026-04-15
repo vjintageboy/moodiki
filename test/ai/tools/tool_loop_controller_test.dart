@@ -78,6 +78,7 @@ ExpertAvailability _mondaySlot() => ExpertAvailability(
 /// Override individual callbacks for targeted testing.
 ToolDispatcher _makeDispatcher() {
   return ToolDispatcher(
+    listExperts: ({specialization}) async => [],
     getAvailability: (_) async => [_mondaySlot()],
     getBookedTimeSlots: (_, __) async => [],
     generateTimeSlots:
@@ -102,6 +103,7 @@ class _FixedDispatcher extends ToolDispatcher {
 
   _FixedDispatcher({required this.fixedResult})
     : super(
+        listExperts: ({specialization}) async => [],
         getAvailability: (_) async => [],
         getBookedTimeSlots: (_, __) async => [],
         generateTimeSlots:
@@ -469,6 +471,7 @@ class _TrackingDispatcher extends ToolDispatcher {
 
   _TrackingDispatcher({required this.onDispatch})
     : super(
+        listExperts: ({specialization}) async => [],
         getAvailability: (_) async => [],
         getBookedTimeSlots: (_, __) async => [],
         generateTimeSlots:

@@ -27,6 +27,8 @@ ExpertAvailability _mondaySlot({
     );
 
 ToolDispatcher _dispatcher({
+  Future<List<Map<String, dynamic>>> Function({String? specialization})?
+      listExperts,
   Future<List<ExpertAvailability>> Function(String)? getAvailability,
   Future<List<String>> Function(String, DateTime)? getBookedTimeSlots,
   List<String> Function({
@@ -44,6 +46,8 @@ ToolDispatcher _dispatcher({
   String? userId,
 }) {
   return ToolDispatcher(
+    listExperts:
+        listExperts ?? ({specialization}) async => [],
     getAvailability:
         getAvailability ?? (_) async => [_mondaySlot()],
     getBookedTimeSlots: getBookedTimeSlots ?? (_, __) async => [],
