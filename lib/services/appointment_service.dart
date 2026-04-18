@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/appointment.dart';
 import 'notification_service.dart';
 import 'supabase_service.dart';
+import '../core/utils/stream_utils.dart';
 
 class AppointmentService {
   final SupabaseClient _supabase = SupabaseService.instance.client;
@@ -216,7 +217,7 @@ class AppointmentService {
   }
 
   Stream<List<Appointment>> streamUserAppointments(String userId) {
-    return _supabase
+    return resilientStream(() => _supabase
         .from('appointments')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
@@ -253,7 +254,7 @@ class AppointmentService {
           }).toList();
 
           return enriched;
-        });
+        }));
   }
 
   // ===========================================================================

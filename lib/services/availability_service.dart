@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/availability.dart';
 import 'supabase_service.dart';
+import '../core/utils/stream_utils.dart';
 
 /// Service for reading and writing expert availability from/to the
 /// `expert_availability` table.
@@ -39,14 +40,12 @@ class AvailabilityService {
 
   /// Real-time stream of all slots for [expertId].
   Stream<List<ExpertAvailability>> streamAvailability(String expertId) {
-    return _supabase
+    return resilientStream(() => _supabase
         .from(_table)
         .stream(primaryKey: ['id'])
         .eq('expert_id', expertId)
         .order('day_of_week')
-        .map((rows) => rows
-            .map((row) => ExpertAvailability.fromMap(row))
-            .toList());
+        .map((rows) => rows.map((row) => ExpertAvailability.fromMap(row)).toList()));
   }
 
   // ── WRITE ─────────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/utils/stream_utils.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._internal();
@@ -31,13 +32,12 @@ class NotificationService {
   // Stream notifications for a user
   Stream<List<Map<String, dynamic>>> streamNotifications(String userId) {
     if (userId.isEmpty) return Stream.value([]);
-    
-    return _supabase
+    return resilientStream(() => _supabase
         .from('notifications')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .order('created_at', ascending: false)
-        .map((data) => List<Map<String, dynamic>>.from(data));
+        .map((data) => List<Map<String, dynamic>>.from(data)));
   }
 
   // Mark notification as read

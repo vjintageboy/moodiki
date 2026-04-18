@@ -8,6 +8,7 @@ import '../models/chat_room.dart';
 import '../models/chat_message.dart';
 import '../models/appointment.dart';
 import 'supabase_service.dart';
+import '../core/utils/stream_utils.dart';
 
 class ChatService {
   final SupabaseClient _supabase = SupabaseService.instance.client;
@@ -178,12 +179,12 @@ class ChatService {
 
   // Get chat stream (newest first)
   Stream<List<ChatMessage>> getChatStream(String roomId) {
-    return _supabase
+    return resilientStream(() => _supabase
         .from('messages')
         .stream(primaryKey: ['id'])
         .eq('room_id', roomId)
         .order('created_at', ascending: false)
-        .map((rows) => rows.map((m) => ChatMessage.fromMap(m)).toList());
+        .map((rows) => rows.map((m) => ChatMessage.fromMap(m)).toList()));
   }
 
   // Get user's chat rooms
@@ -192,12 +193,13 @@ class ChatService {
       return Stream.value(const <ChatRoom>[]);
     }
 
-    final baseStream = _supabase
-        .from('chat_rooms')
-        .stream(primaryKey: ['id'])
-        .order('updated_at', ascending: false);
+    return resilientStream(() {
+      final baseStream = _supabase
+          .from('chat_rooms')
+          .stream(primaryKey: ['id'])
+          .order('updated_at', ascending: false);
 
-    return baseStream.asyncMap((rooms) async {
+      return baseStream.asyncMap((rooms) async {
       try {
         if (rooms.isEmpty) return <ChatRoom>[];
         final roomIds = rooms.map((r) => r['id'].toString()).toList();
@@ -271,9 +273,10 @@ class ChatService {
         debugPrint('❌ getUserChats asyncMap error: $e');
         return <ChatRoom>[];
       }
-    }).handleError((error, stackTrace) {
-      debugPrint('❌ getUserChats stream caught error: $error');
-      return <ChatRoom>[];
+      }).handleError((error, stackTrace) {
+        debugPrint('❌ getUserChats asyncMap error: $error');
+        return <ChatRoom>[];
+      });
     });
   }
 

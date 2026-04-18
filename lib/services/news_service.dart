@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/news_post.dart';
 import '../models/post_comment.dart';
+import '../core/utils/stream_utils.dart';
 
 class NewsService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -10,7 +11,7 @@ class NewsService {
 
   /// Stream all posts, ordered by createdAt descending
   Stream<List<NewsPost>> streamPosts({PostCategory? category}) {
-    try {
+    return resilientStream(() {
       final query = category != null
           ? _supabase
               .from('posts')
@@ -60,10 +61,7 @@ class NewsService {
           return NewsPost.fromMap(enrichedPost);
         }).toList();
       });
-    } catch (e) {
-      debugPrint('❌ Error creating query: $e');
-      rethrow;
-    }
+    });
   }
 
   /// Get single post by ID
@@ -214,16 +212,16 @@ class NewsService {
 
   /// Stream live comment count for a post (source of truth from post_comments)
   Stream<int> streamCommentCount(String postId) {
-    return _supabase
+    return resilientStream(() => _supabase
         .from('post_comments')
         .stream(primaryKey: ['id'])
         .eq('post_id', postId)
-        .map((rows) => rows.length);
+        .map((rows) => rows.length));
   }
 
   /// Stream comments for a post
   Stream<List<PostComment>> streamComments(String postId) {
-    return _supabase
+    return resilientStream(() => _supabase
         .from('post_comments')
         .stream(primaryKey: ['id'])
         .eq('post_id', postId)
@@ -253,7 +251,7 @@ class NewsService {
             enrichedComment['users'] = usersMap[comment['user_id']];
             return PostComment.fromMap(enrichedComment);
           }).toList();
-        });
+        }));
   }
 
   /// Add comment to post

@@ -4,6 +4,7 @@ import '../models/app_user.dart';
 import '../models/meditation.dart';
 import '../models/streak.dart';
 import '../models/mood_entry.dart';
+import '../core/utils/stream_utils.dart';
 
 class SupabaseService {
   static final SupabaseService instance = SupabaseService._internal();
@@ -81,12 +82,12 @@ class SupabaseService {
   }
 
   Stream<List<MoodEntry>> streamMoodEntries(String userId) {
-    return _supabase
+    return resilientStream(() => _supabase
         .from('mood_entries')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .order('created_at', ascending: false)
-        .map((data) => data.map((map) => MoodEntry.fromMap(map)).toList());
+        .map((data) => data.map((map) => MoodEntry.fromMap(map)).toList()));
   }
 
   Future<List<MoodEntry>> getMoodEntries(String userId) async {
@@ -478,11 +479,11 @@ class SupabaseService {
 
   /// Stream meditations (Realtime)
   Stream<List<Meditation>> streamMeditations() {
-    return _supabase
+    return resilientStream(() => _supabase
         .from('meditations')
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false)
-        .map((data) => data.map((map) => Meditation.fromMap(map)).toList());
+        .map((data) => data.map((map) => Meditation.fromMap(map)).toList()));
   }
 
   /// Get meditations (Future-based for robustness)
@@ -546,17 +547,15 @@ class SupabaseService {
   }
 
   Stream<Streak?> streamStreak(String userId) {
-    // Stream mood_entries và tính lại streak mỗi khi có thay đổi
-    return _supabase
+    return resilientStream(() => _supabase
         .from('mood_entries')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .order('created_at', ascending: false)
         .map((rows) {
-          final entries =
-              rows.map((m) => MoodEntry.fromMap(m)).toList();
+          final entries = rows.map((m) => MoodEntry.fromMap(m)).toList();
           return Streak.fromMoodEntries(userId: userId, entries: entries);
-        });
+        }));
   }
 
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {

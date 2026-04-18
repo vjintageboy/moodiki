@@ -75,12 +75,7 @@ class _MoodHistoryPageState extends State<MoodHistoryPage>
         }
       },
       onError: (e) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _hasCompletedInitialFetch = true;
-          });
-        }
+        debugPrint('Mood stream error (ignored): $e');
       },
     );
   }
